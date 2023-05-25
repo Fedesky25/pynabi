@@ -1,5 +1,5 @@
-from typing import Union, Tuple, List, Literal, Iterable, Generator
-from ._common import sectionTitle, Stampable
+from typing import Union, Tuple, List, Literal, Iterable
+from ._common import Stampable
 from ._crystal import AtomBasis, Atom
 from enum import Enum
 
@@ -170,7 +170,6 @@ class AbIO(Stampable):
             if len(path) > 0:
                 tmp.append(f"{key}data_prefix{suffix} \"{path}\"")
         if len(tmp) > 0:
-            res.append(sectionTitle(index, "Prefixes"))
             res.extend(tmp)
         tmp = []
         if index < 2:
@@ -182,13 +181,11 @@ class AbIO(Stampable):
             for (i,val) in self._in.items():
                 tmp.append(i.stamp(val, suffix))
         if len(tmp) > 0:
-            res.append(sectionTitle(index, "Input data"))
             res.extend(tmp)
         tmp = []
         for (o,n) in self._out.items():
             tmp.append(f"prt{o.value}{suffix} {n}")
         if len(tmp) > 0:
-            res.append(sectionTitle(index, "Printed data"));
             res.extend(tmp)
         return '\n'.join(res)
 
@@ -205,7 +202,7 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet):
     elif len(datasets) == 1:
         raise ValueError("Cannot use a single dataset")
     
-    res: list[str] = [f"ndtset {len(datasets)}"]
+    res: list[str] = [f"ndtset {len(datasets)}\n"]
 
     atomSet = set() if setup.atoms is None else set(setup.atoms.getAtoms())
     initialAtomCount = len(atomSet)
@@ -220,8 +217,10 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet):
     
     atomPool = list(atomSet)
     res.append(Atom.poolstr(atomPool))
+    res.append("\n# Common DataSet")
     res.append(setup.stamp(atomPool))
     for s in datasets:
+        res.append(f"\n# DataSet {s.index}")
         res.append(s.stamp(atomPool))
     return '\n'.join(res)
     

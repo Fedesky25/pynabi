@@ -1,6 +1,6 @@
 from typing import Union, Tuple, Literal
 from enum import Enum
-from ._common import Stampable, sectionTitle
+from ._common import Stampable
 
 
 __all__ = ["SpinType", "Occupation", "Smearing"]
@@ -16,8 +16,7 @@ class SpinPolarization(Stampable):
 
     def stamp(self, index: int):
         s = index or ''
-        return f"""{sectionTitle(index,"Spin polarization")}
-nsppol{s} {self.polarizationNumber}
+        return f"""nsppol{s} {self.polarizationNumber}
 nspinor{s} {self.spinorNumber}
 nspden{s} {self.density}"""
     
@@ -49,9 +48,8 @@ class Occupation(Stampable):
 
     def stamp(self, index: int):
         s = index or ''
-        extra = "\n".join(f"{n}{s} {v}" for (n,v) in self.props.items())
-        title = sectionTitle(index, "Occupation")
-        return f"{title}{band2str(self.bands, s)}\noccopt{s} {self.option}\n{extra}"
+        extra = "".join(f"\n{n}{s} {v}" for (n,v) in self.props.items())
+        return f"occopt{s} {self.option}{band2str(self.bands, s)}{extra}"
     
     @staticmethod
     def EqualBandNumber(occupations: float, bands: int, polarized: bool = False):

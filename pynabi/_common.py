@@ -27,7 +27,6 @@ class Stampable:
 
 class OneLineStamp(Stampable):
     name = ''
-    longname = ''
     
     def __init__(self, value, suffix: str = '') -> None:
         super().__init__()
@@ -36,7 +35,7 @@ class OneLineStamp(Stampable):
 
     def stamp(self, index: int):
         t = type(self)
-        return f"{sectionTitle(index, t.longname)}\n{t.name}{self.suffix}{index or ''} {self.value}"
+        return f"{t.name}{self.suffix}{index or ''} {self.value}"
 
 
 class SKO:

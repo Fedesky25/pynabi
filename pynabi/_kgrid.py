@@ -1,4 +1,4 @@
-from ._common import Vec3D, sectionTitle, Stampable
+from ._common import Vec3D, Stampable
 from typing import Union, Tuple
 from enum import Enum
 
@@ -18,8 +18,7 @@ class ManualKGrid(KGrid):
         suf = index or ''
         kpt_name = f"kpt{suf}"
         kpt_value = ('\n ' + ' '*len(kpt_name)).join(str(v) for v in self.points)
-        return f"""{sectionTitle(index,"Manual k grid")}
-kptopt{suf} 0
+        return f"""kptopt{suf} 0
 nkpt{suf} {len(self.points)}
 {kpt_name} {kpt_value}
 kptnrm{suf} {self.norm}"""
@@ -45,8 +44,7 @@ class SymmetricKGrid(KGrid):
         s = index or ''
         shift_name = f"kpt{s}"
         shift_value = ('\n ' + ' '*len(shift_name)).join(str(v) for v in self.shifts)
-        return f"""{sectionTitle(index, "k-Grid")}
-kptopt{s} {self.symmetry}
+        return f"""kptopt{s} {self.symmetry}
 ngkpt{s} {self.number[0]} {self.number[1]} {self.number[2]}
 nshiftk{s} {len(self.shifts)}
 {shift_name} {shift_value}"""
@@ -71,7 +69,6 @@ class KPath(KGrid):
         bn = f"kptbounds{s}"
         bv = ('\n '+' '*len(bn)).join(str(b) for b in self.boundaries)
         dn, dv = ("ndivsm", self.divisions) if type(self.divisions) is int else ("ndivk", ' '.join(str(d) for d in self.divisions)) # type: ignore
-        return f"""{sectionTitle(index, "k path")}
-kptopt{s} -{len(self.boundaries)-1}
+        return f"""kptopt{s} -{len(self.boundaries)-1}
 {bn} {bv}
 {dn}{s} {dv}"""

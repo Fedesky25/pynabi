@@ -17,19 +17,16 @@ class ToleranceOn(Enum):
 
 class Tolerance(OneLineStamp):
     name = "tol"
-    longname = "tolerance"
     
 
 class UseWaveletBasis(OneLineStamp):
     name = "usewvl"
-    longname = "use wavelet basis"
     def __init__(self, use: bool) -> None:
         super().__init__(int(use))
 
 
 class SCFProcedure(OneLineStamp):
     name = "iscf"
-    longname = "SCF Procedure"
     def __init__(self, algorithm: int) -> None:
         super().__init__(algorithm)
         assert -3 <= algorithm <= 17, "SCF algorithm must go from -3 to 17" 
@@ -37,7 +34,6 @@ class SCFProcedure(OneLineStamp):
 
 class StepNumber(OneLineStamp):
     name = "nstep"
-    longname = "Number of steps"
     def __init__(self, value: int) -> None:
         super().__init__(value)
         assert type(value) is int and value >= 0, "Number of steps must be an integer greater than or equal to 0"
@@ -45,7 +41,6 @@ class StepNumber(OneLineStamp):
 
 class EnergyCutoff(OneLineStamp):
     name = "ecut"
-    longname = "Energy cutoff"
     def __init__(self, value: float, unit: Unit = Unit.Hartree) -> None:
         super().__init__(f"{value} {unit.name}")
         assert unit.value == 1, "unit of cutoff energy must be energy"

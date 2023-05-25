@@ -1,4 +1,4 @@
-from ._common import Vec3D, sectionTitle, Stampable
+from ._common import Vec3D, Stampable
 from typing import Union, List, Tuple
 
 __all__ = ["Atom", "AtomBasis", "Lattice"]
@@ -54,7 +54,7 @@ class AtomBasis(Stampable):
     def stamp(self, index: int, pool: List[Atom]):
         indexes = [pool.index(a[0]) for a in self.atoms]
         suffix = str(index or '');
-        res: list[str] = [sectionTitle(index, 'Atom basis')]
+        res: list[str] = []
         l = len(indexes)
         if l > 0:
             res.append(f"natoms{suffix} {l}")
@@ -74,7 +74,7 @@ class Lattice(Stampable):
 
     def stamp(self, index: int):
         suffix = index if index > 0 else ''
-        res: list[str] = [sectionTitle(index, "Lattice")]
+        res: list[str] = []
         if self.scaling is not None:
             res.append(f"acell{suffix} {self.scaling}")
         if self.prop is not None:
