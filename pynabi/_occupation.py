@@ -81,7 +81,7 @@ class Occupation(Stampable):
 def band2str(b: Union[None,int,Tuple[int]], s):
     if b is None:
         return ''
-    s = '\n nbands{s} '
+    s = f"\nnbands{s} "
     if type(b) is tuple:
         s = s + (' '.join(str(v) for v in b))
     else:
