@@ -60,8 +60,11 @@ class Occupation(Stampable):
         return Occupation(0, bands, occ=f"{m}*{occupations}")
 
     @staticmethod
-    def Semiconductor(spinMagnetizationTarget: float = -99.99, bands: Union[int,None] = None):
-        return Occupation(1, bands, spinmagntarget=spinMagnetizationTarget)
+    def Semiconductor(bands: Union[int,None] = None, spinMagnetizationTarget: Union[float,None] = None):
+        if spinMagnetizationTarget is None:
+            return Occupation(1, bands)
+        else:
+            return Occupation(1, bands, spinmagntarget=spinMagnetizationTarget)
     
     # @staticmethod
     # def Manual(*occupations: Tuple[float]):
