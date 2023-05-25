@@ -35,16 +35,9 @@ sets = [DataSet(EnergyCutoff(8.0 + i*0.25)) for i in range(0,17)]
 bands = DataSet(
     SCFProcedure(-2),
     ToleranceOn.WavefunctionSquaredResidual(1e-12),
-    AbIO().get(I.ElectronDensity, sets[-1]),    # get the elctron density from the last dataset
-    Occupation.Semiconductor(bands=8),          # semiconductor occupation (occopt=1) with 8 bands
-    KPath(10,                                   # define a path in the k-space    
-          Vec3D.zero(),                         # Gamma
-          Vec3D(0.5, 0.0, 0.5),                 # X
-          Vec3D(0.5, 0.25, 0.75),               # W
-          Vec3D.uniform(0.5),                   # L
-          Vec3D.zero(),                         # Gamma
-          Vec3D(3/8, 3/8, 3/4),                 # K
-          Vec3D(0.5, 0.0, 0.5))                 # X
+    AbIO().get(I.ElectronDensity, sets[-1]),            # get the elctron density from the last dataset
+    Occupation.Semiconductor(bands=8),                  # semiconductor occupation (occopt=1) with 8 bands
+    KPath.through(10, CriticalPointsOf.BCC, "GHNGPH"),  # define a path in the k-space
 )
 
 with open("./out.txt", 'w') as f:
@@ -139,21 +132,20 @@ tolwfr18 1e-12
 getden18 17
 occopt18 1
 nbands18 8
-kptopt18 -6
+kptopt18 -5
 kptbounds18 0 0 0
-            0.5 0.0 0.5
-            0.5 0.25 0.75
-            0.5 0.5 0.5
+            -0.5 0.5 0.5
+            0.0 0.5 0.0
             0 0 0
-            0.375 0.375 0.75
-            0.5 0.0 0.5
+            0.25 0.25 0.25
+            -0.5 0.5 0.5
 ndivsm18 10
 ```
 </details>
 
 ## Features
 
- - Presets for common crystal structures (cubic, BCC, FCC, HCP)
+ - Presets for common crystal structures (CUB, BCC, FCC, HCP)
  - Helper functions to better control the k-points definition
  - Multi dataset support
  - Handy management of [file handling variables](https://docs.abinit.org/variables/files/)
