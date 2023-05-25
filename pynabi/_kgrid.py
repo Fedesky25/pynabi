@@ -1,8 +1,8 @@
 from ._common import Vec3D, Stampable
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict
 from enum import Enum
 
-__all__ = ["BZ", "ManualKGrid", "SymmetricKGrid", "KPath"]
+__all__ = ["BZ", "ManualKGrid", "SymmetricKGrid", "KPath", "CriticalPointsOf"]
 
 class KGrid(Stampable):
     pass
@@ -50,6 +50,26 @@ nshiftk{s} {len(self.shifts)}
 {shift_name} {shift_value}"""
 
 
+class CriticalPointsOf(Enum):
+    CUB = {
+        'R': Vec3D(0.5, 0.5, 0.5),
+        'X': Vec3D(0.0, 0.5, 0.0),
+        'M': Vec3D(0.5, 0.5, 0.0)
+    }
+    BCC = {
+        'H': Vec3D(-0.5, 0.5, 0.5),
+        'P': Vec3D.uniform(0.25),
+        'N': Vec3D(0.0, 0.5, 0.0)
+    }
+    FCC = {
+        'X': Vec3D(0.0, 0.5, 0.5),
+        'L': Vec3D.uniform(0.5),
+        'W': Vec3D(0.25, 0.75, 0.5),
+        'U': Vec3D(0.25, 0.625, 0.625),
+        'K': Vec3D(0.375, 0.75, 0.375)
+    }
+
+
 class KPath(KGrid):
     def __init__(self, divisions: Union[int,Tuple[int,...]], *boundaries: Vec3D) -> None:
         super().__init__()
@@ -72,3 +92,21 @@ class KPath(KGrid):
         return f"""kptopt{s} -{len(self.boundaries)-1}
 {bn} {bv}
 {dn}{s} {dv}"""
+
+    @staticmethod
+    def through(divisions: Union[int,Tuple[int,...]], pointSet: Union[CriticalPointsOf,Dict[str,Vec3D]], *points: Union[str,Vec3D]):
+        s: dict[str,Vec3D] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
+        b: list[Vec3D] = []
+        for p in points:
+            if type(p) is str:
+                for c in p:
+                    if c == 'G':
+                        b.append(Vec3D.zero())
+                    else:
+                        assert c in s, f"(critical) point '{c}' is not defined"
+                        b.append(s[c])
+            elif type(p) is Vec3D:
+                b.append(p)
+            else:
+                raise TypeError(f"Invalid type of k-path point (got {type(p)})")
+        return KPath(divisions, *b)
