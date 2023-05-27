@@ -5,7 +5,8 @@ Python package to easily create [Abinit](https://www.abinit.org/) input files.
 ## Example
 
 ```python
-from pynabi import createAbi, DataSet, AbIn, AbOut, presets, Atom, BZ, SymmetricKGrid, KPath, CriticalPointsOf, Vec3D, ToleranceOn, EnergyCutoff, StepNumber, SCFProcedure, Occupation
+from pynabi import createAbi, DataSet, AbIn, AbOut, presets, Atom, Vec3D, ToleranceOn, EnergyCutoff, StepNumber, SCFProcedure, Occupation
+from pynabi.kspace import CriticalPointsOf, BZ, MonkhorstPackGrid, path
 
 # folder with pseudo potentials
 pseudo_folder = "./pseudos/PBE-SR"
@@ -16,13 +17,14 @@ Si = Atom.of("Si") # Z=14 and pseudos located at "Si.psp8"
 
 # base dataset with common variables
 base = DataSet(
-    AbOut("./scf/scf"),                         # prefixes for output files
+    AbOut("./output/prefix"),                   # prefixes for output files
     presets.BCC(5.09, Si, Si, pseudo_folder),   # creates AtomBasis and Lattice of a BCC
-    SymmetricKGrid(BZ.Irreducible, 2,           # easily define kptopt, ngkpt, nshiftk, kpt
-                   Vec3D(0.5, 0.5, 0.5),
-                   Vec3D(0.5, 0.0, 0.0),
-                   Vec3D(0.0, 0.5, 0.0),
-                   Vec3D(0.0, 0.0, 0.5)),
+    MonkhorstPackGrid(                          # easily define kptopt, ngkpt, nshiftk, kpt
+        BZ.Irreducible, 4,
+        Vec3D(0.5, 0.5, 0.5),
+        Vec3D(0.5, 0.0, 0.0),
+        Vec3D(0.0, 0.5, 0.0),
+        Vec3D(0.0, 0.0, 0.5)),
     ToleranceOn.EnergyDifference(1e-6),         # expressively define the tolerance
     SCFProcedure(0),                            # iscf
     StepNumber(30)                              # nstep
@@ -37,7 +39,7 @@ bands = DataSet(
     ToleranceOn.WavefunctionSquaredResidual(1e-12),
     AbIn().ElectronDensity(sets[-1]),                   # get the electron density from the last dataset
     Occupation.Semiconductor(bands=8),                  # semiconductor occupation (occopt=1) with 8 bands
-    KPath.through(10, CriticalPointsOf.BCC, "GHNGPH"),  # define a path in the k-space   
+    path(10, "GHNGPH", CriticalPointsOf.BCC),           # easily define a path in the k-space   
 )
 
 with open("./out.txt", 'w') as f:
@@ -62,15 +64,13 @@ xred 0 0 0
       0.5 0.5 0.5
 pp_dirpath "./pseudos/PBE-SR"
 outdata_prefix "./output/prefix"
+
 acell 5.09 5.09 5.09
 angdeg 90 90 90
 kptopt 1
-ngkpt 2 2 2
+ngkpt 4 4 4
 nshiftk 4
-kpt 0.5 0.5 0.5
-    0.5 0.0 0.0
-    0.0 0.5 0.0
-    0.0 0.0 0.5
+shiftk 0.5 0.5 0.5   0.5 0.0 0.0   0.0 0.5 0.0   0.0 0.0 0.5
 toldfe 1e-06
 iscf 0
 nstep 30
@@ -133,12 +133,7 @@ getden18 17
 occopt18 1
 nbands18 8
 kptopt18 -5
-kptbounds18 0 0 0
-            -0.5 0.5 0.5
-            0.0 0.5 0.0
-            0 0 0
-            0.25 0.25 0.25
-            -0.5 0.5 0.5
+kptbounds18 0 0 0   -0.5 0.5 0.5   0.0 0.5 0.0   0 0 0   0.25 0.25 0.25   -0.5 0.5 0.5
 ndivsm18 10
 ```
 </details>
