@@ -5,8 +5,8 @@ Python package to easily create [Abinit](https://www.abinit.org/) input files.
 ## Example
 
 ```python
-from pynabi import createAbi, DataSet, AbIn, AbOut, presets, Atom, Vec3D, ToleranceOn, EnergyCutoff, StepNumber, SCFProcedure, Occupation
-from pynabi.kspace import CriticalPointsOf, BZ, MonkhorstPackGrid, path
+from pynabi import createAbi, DataSet, AbIn, AbOut, presets, Atom, ToleranceOn, EnergyCutoff, StepNumber, SCFProcedure, Occupation
+from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, path, UsualKShifts
 
 # folder with pseudo potentials
 pseudo_folder = "./pseudos/PBE-SR"
