@@ -50,3 +50,7 @@ def sectionTitle(index: int, name: str):
         return f"\n# DS{index} - {name}"
     else:
         return f"\n# {name}"
+    
+    
+def _pos_int(v):
+    return type(v) is int and v > 0

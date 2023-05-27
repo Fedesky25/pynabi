@@ -1,4 +1,4 @@
-from ._common import Vec3D as _V, Stampable as _Stmp
+from ._common import Vec3D as _V, Stampable as _Stmp, _pos_int
 from enum import Enum as _E
 from typing import Dict as _dict, Any as _any, Union as _union, Tuple as _tuple, Iterable as _iter
 
@@ -103,10 +103,6 @@ def manual(*points: _V, normalize: float = 1.0):
         "kpt": "   ".join(str(v) for v in points),
         "kptnrm": normalize
     })
-
-
-def _pos_int(v):
-    return type(v) is int and v > 0
 
 
 class SymmetricGrid:
