@@ -87,7 +87,7 @@ def MonkhorstPackGrid(symmetry: BZ, number: _union[int, _tuple[int, int, int]], 
         number = (number, number, number) # type: ignore
     
     return KSpaceDefinition(symmetry.value, {
-        "ngkpt": ' '.join(number), # type: ignore
+        "ngkpt": ' '.join(str(n) for n in number), # type: ignore
         "nshiftk": len(shifts),
         "shiftk": "   ".join(str(s) for s in shifts)
     })
