@@ -141,7 +141,8 @@ ndivsm18 10
  - Helper functions to better control the k-points definition
  - Multi dataset support
  - Handy management of [file handling variables](https://docs.abinit.org/variables/files/)
- - Almost full covarage of [basic input variables](https://docs.abinit.org/variables/basic/)
+ - Almost full covarage of [basic input variables](https://docs.abinit.org/variables/basic/) (missing nbandhf, symrel, tnons, wvl_hgrid)
+ - partial coverage of [ground state variables](https://docs.abinit.org/variables/gstate/)
  - _More to come..._
 
 ## Documentation
