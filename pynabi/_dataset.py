@@ -70,9 +70,13 @@ class AbIn(Stampable):
         self._d: dict[Callable, Union['DataSet', str, PreviousRun]] = dict()
     
     def stamp(self, index: int):
-        head = '' if self._p is None else f"indata_prefix \"{self._p}\"\n"
         body = '\n'.join(AbIn._print_helper(k,v,index) for k, v in self._d.items())
-        return head + body
+        if self._p is None:
+            return body
+        elif len(body) == 0:
+            return f"indata_prefix \"{self._p}\""
+        else:
+            return f"indata_prefix \"{self._p}\"\n{body}"
     
     @staticmethod
     def _print_helper(m: Callable, v: Union['DataSet', str, PreviousRun], i: int):
@@ -136,9 +140,13 @@ class AbOut(Stampable):
 
     def stamp(self, index: int):
         s = index or ''
-        head = '' if self._p is None else f"outdata_prefix{s} \"{self._p}\"\n"
         body = '\n'.join(f"prt{k}{s} {v}" for k,v in self._d.items())
-        return head + body
+        if self._p is None:
+            return body
+        elif len(body) == 0:
+            return f"outdata_prefix \"{self._p}\""
+        else:
+            return f"outdata_prefix \"{self._p}\"\n{body}"
 
     PotentialAndDensity1D = _os("1dm")
     CheckPoint = _os("chkprdm")
