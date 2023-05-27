@@ -3,7 +3,7 @@ from enum import Enum as _E
 from typing import Dict as _dict, Any as _any, Union as _union, Tuple as _tuple, Iterable as _iter
 
 
-__all__ = ["BZ", "CriticalPointsOf", "manual", "MonkhorstPackGrid", "fromSuperLattice"]
+__all__ = ["BZ", "CriticalPointsOf", "manual", "SymmetricGrid", "UsualKShifts", "path"]
 
 
 class BZ(_E):
@@ -44,6 +44,14 @@ class CriticalPointsOf(_E):
     }
 
 
+class UsualKShifts(_E):
+    Unshifted = (_V.zero(),)
+    Default = (_V.uniform(0.5),)
+    BCC = (_V.uniform(0.25), _V.uniform(-0.25))
+    FCC = (_V.uniform(0.5), _V(0.5,0.0,0.0), _V(0.0,0.5,0.0), _V(0.0,0.0,0.5))
+    HEX = (_V(1.0,0.0,0.0), _V(-0.5,0.8660254037844386,0.0), _V(0.0,0.0,1.0))
+
+
 class KSpaceDefinition(_Stmp):
     def __init__(self, option: int, props: _dict[str, _any]) -> None:
         super().__init__()
@@ -52,8 +60,9 @@ class KSpaceDefinition(_Stmp):
     
     def stamp(self, index: int):
         s = index or ''
+        head = '' if self.kptop == 100 else f"kptopt{s} {self.kptop}\n"
         body = '\n'.join(f"{k}{s} {v}" for k,v in self.props.items())
-        return f"kptopt{s} {self.kptop}\n{body}"
+        return f"{head}{body}"
 
 
 def manual(*points: _V, normalize: float = 1.0):
@@ -69,38 +78,48 @@ def _pos_int(v):
     return type(v) is int and v > 0
 
 
-def MonkhorstPackGrid(symmetry: BZ, number: _union[int, _tuple[int, int, int]], *shifts: _V):
-    """Creates a symmetric k grid
+class SymmetricGrid:
+    def __init__(self, symmetry: BZ, shifts: _union[_tuple[_V,...], UsualKShifts] = ()):
+        self._sy = symmetry
+        if type(shifts) is UsualKShifts:
+            self._sh = shifts.value
+        elif type(shifts) is tuple:
+            assert all(type(v) is _V for v in shifts), "K Shifts must be vectors"
+            self._sh = shifts
+        else:
+            raise TypeError("Invalid type of k shifts")
     
-    | name | | description |
-    | ---: | - | :---------- |
-    | symmetry | - | Brillouin zone symmetry to use |
-    | number | - | Number of k points of Monkhorst-Pack grids |
-    | shiftk | - | Shifts of the homogeneous grid of k points |
-    """
-    assert len(shifts) > 0, "There must be at least one k shift"
+    def _u(self, n: str, v: str):
+        assert len(self._sh) > 0, "There must be at least one k shift"
+        return KSpaceDefinition(self._sy.value, {
+            "nshiftk": len(self._sh),
+            "shiftk": "   ".join(str(s) for s in self._sh),
+            n: v
+        })
+    
+    def ofMonkhorstPack(self, a: int, b: _union[int,None] = None, c: _union[int,None] = None):
+        b = a if b is None else b
+        c = a if c is None else c
+        assert _pos_int(a) and _pos_int(b) and _pos_int(c), "Number of k points in Monkhorst-Pack grid must be a positive integer"
+        return self._u("ngkpt", f"{a} {b} {c}")
+    
+    def fromSuperLattice(self, a: _V, b: _V, c: _V):
+        return self._u("kptrlatt", f"{a} {b} {c}")
+    
+
+    def automatic(self, length: float = 30.0):
+        assert length > 0, "Real space length used for automatic k grid must be positive"
+        return KSpaceDefinition(self._sy.value, { "kptrlen": length })
+
+
+def setMPGridPointsNumber(number: _union[int, _tuple[int, int, int]]):
     if type(number) is tuple:
         assert len(number) == 3, "numbers of k points must be three"
         assert all(_pos_int(v) for v in number), "numbers of k points must be positive integers"
+        return KSpaceDefinition(100, { "ngkpt": f"{number[0]} {number[1]} {number[2]}" })
     else:
         assert _pos_int(number), "Number of k points (per primitive) must be a positive integer"
-        number = (number, number, number) # type: ignore
-    
-    return KSpaceDefinition(symmetry.value, {
-        "ngkpt": ' '.join(str(n) for n in number), # type: ignore
-        "nshiftk": len(shifts),
-        "shiftk": "   ".join(str(s) for s in shifts)
-    })
-
-
-def fromSuperLattice(symmetry: BZ, coordinates: _tuple[_V, _V, _V], *shifts: _V):
-    assert len(shifts) > 0, "There must be at least one k shift"
-    assert len(coordinates) == 3 and all(type(v) is _V for v in coordinates), "There must be three super lattice vectors"
-    return KSpaceDefinition(symmetry.value, {
-        "kptrlatt": "   ".join(str(v) for v in coordinates),
-        "nshiftk": len(shifts),
-        "shiftk": "   ".join(str(s) for s in shifts)
-    })
+        return KSpaceDefinition(100, { "ngkpt": f"{number} {number} {number}" })
 
 
 def path(divisions: _union[int,_tuple[int,...]], points: _union[str,_iter[_union[str,_V]]], pointSet: _union[CriticalPointsOf,_dict[str,_V]] = {}):
