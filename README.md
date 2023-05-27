@@ -17,17 +17,13 @@ Si = Atom.of("Si") # Z=14 and pseudos located at "Si.psp8"
 
 # base dataset with common variables
 base = DataSet(
-    AbOut("./output/prefix"),                   # prefixes for output files
-    presets.BCC(5.09, Si, Si, pseudo_folder),   # creates AtomBasis and Lattice of a BCC
-    MonkhorstPackGrid(                          # easily define kptopt, ngkpt, nshiftk, kpt
-        BZ.Irreducible, 4,
-        Vec3D(0.5, 0.5, 0.5),
-        Vec3D(0.5, 0.0, 0.0),
-        Vec3D(0.0, 0.5, 0.0),
-        Vec3D(0.0, 0.0, 0.5)),
-    ToleranceOn.EnergyDifference(1e-6),         # expressively define the tolerance
-    SCFProcedure(0),                            # iscf
-    StepNumber(30)                              # nstep
+    AbOut("./scf/scf"),                             # prefixes for output files
+    presets.BCC(5.09, Si, Si, pseudo_folder),       # creates AtomBasis and Lattice of a BCC
+    SymmetricGrid(BZ.Irreducible, UsualKShifts.BCC) # easily define kptopt, ngkpt, nshiftk, kpt
+        .ofMonkhorstPack(4),
+    ToleranceOn.EnergyDifference(1e-6),             # expressively define the tolerance
+    SCFProcedure(0),                                # iscf
+    StepNumber(30)                                  # nstep
 )
 
 # datasets to see the convergenge as a function of energy
