@@ -133,17 +133,31 @@ kptopt18 -5
 kptbounds18 0 0 0   -0.5 0.5 0.5   0.0 0.5 0.0   0 0 0   0.25 0.25 0.25   -0.5 0.5 0.5
 ndivsm18 10
 ```
+
 </details>
 
 ## Features
 
- - Presets for common crystal structures (CUB, BCC, FCC, HCP)
- - Helper functions to better control the k-points definition
  - Multi dataset support
+ - Helper funtion/methods for common crystal structures (CUB, BCC, FCC, HEX, RHL)
+ - Smooth experience in defining the k-points
  - Handy management of [file handling variables](https://docs.abinit.org/variables/files/)
  - Almost full covarage of [basic input variables](https://docs.abinit.org/variables/basic/) (missing nbandhf, symrel, tnons, wvl_hgrid)
- - partial coverage of [ground state variables](https://docs.abinit.org/variables/gstate/)
+ - Partial coverage of [ground state variables](https://docs.abinit.org/variables/gstate/)
  - _More to come..._
+
+## Why PynAbi over pure Abinit files?
+
+If you're a very experienced Abinit user who knows its variables and their possible values (and associated meaning), then this package probably isn't for you.
+For all other users, here's a list of reasons why you could find PynAbi useful:
+
+ 1. It allows for programmatic use of the datasets, e.g. reusability of instuctions, loop to generate datasets programmatically
+ 2. It provides some useful presets and helper functions/methods that allows you to skip to the fun part of the simulation
+ 3. Under the hood, it checks for the validity of variable values *before* starting Abinit
+ 4. It makes use of expressive declarations and definition, leading to readable and comprehensible istructions
+ 5. If you're using a code editor (with autocompletition), you'll get suggetions of all the possible options in a more natural language 
+
+Some prior knowledge of Abinit (and DFT in general) is nonetheless needed to fully understand what actually is to be simulated: this package only provides a handier way to generate the required files.
 
 ## Documentation
 
