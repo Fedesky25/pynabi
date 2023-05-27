@@ -1,9 +1,11 @@
-from typing import Union, Tuple, List, Literal, Iterable
+from typing import Union, List, Iterable, Literal, Callable
 from ._common import Stampable
 from ._crystal import AtomBasis, Atom
-from enum import Enum
+from inspect import stack
 
-__all__ = ["DataSet", "PreviousRun", "I", "O", "AbIO", "createAbi"]
+
+__all__ = ["DataSet", "PreviousRun", "AbIn", "AbOut", "createAbi"]
+
 
 def splat(i: Iterable[Union[Stampable,Iterable[Stampable]]]) -> Iterable[Stampable]:
     for v in i:
@@ -14,6 +16,7 @@ def splat(i: Iterable[Union[Stampable,Iterable[Stampable]]]) -> Iterable[Stampab
                 yield from splat(v)
             except:
                 raise TypeError("Arguments provided to dataset must be DataSet stampables of iterables of them")
+
 
 class DataSet:
     def __init__(self, *stampables: Union[Stampable,Iterable[Stampable]]) -> None:
@@ -48,146 +51,127 @@ class PreviousRun(object):
         return cls._instance
 
 
-class I(Enum):
-    FirstOrderDensity = "1den", 0
-    FirstOrderWavefunction = "1wf", 0
-    BetheSalpeterCouplingBlock = "bscoup", 0
-    BetheSalpeterEigenstates = "bseig", 0
-    BetheSalpeterResonantBlock = "bsreso", 0
-    DDB = "ddb", 1
-    DDKWavefunctions = "ddk", 0
-    dE = "delfd", 0
-    ElectronDensity = "den", 1
-    dkdE = "dkde", 0
-    dkdk = "dkdk", 0
-    PotentialDerivative = "dvdb", 1
-    EffectiveMasses = "efmas", 0
-    HaydockRestartFile = "haydock", 0
-    OccupationNumbers = "occ", 0
-    KSPotential = "pot", 2
-    QuasiParticleStructure = "qps", 0
-    Screening = "scr", 1
-    SIGEPH = "sigeph", 2
-    Susceptibility = "suscep", 0
-    WavefunctionsK = "wfk", 1
-    FineWavefunctionsK = "wfkfine", 2
-    WavefunctionsQ = "wfq", 1
-    #chkprdm
-
-    def ok(self, value):
-        t = type(value)
-        if self.value[1] == 0 and t is str:
-            raise ValueError(f"{self.name} cannot be read from a file")
-        if self.value[1] == 2 and t is not str:
-            raise ValueError(f"{self.name} can only be read from a file")
-
-    def stamp(self, value: Union[PreviousRun, DataSet, str], index: Union[int,Literal['']]):
-        t = type(value)
-        if t is PreviousRun:
-            return f"ird{self.value[0]}{index or ''} 1"
-        elif t is str:
-            return f"get{self.value[0]}_filepath{index or ''} \"{value}\""
+def _AbInMethod(prop: str, sel: Literal[0,1,2] = 0):
+    def method(self: 'AbIn', value: Union['DataSet', str, PreviousRun]): 
+        if type(value) is str:
+            assert sel != 0, f"{method._name} cannot be read from a file"
         else:
-            if value.index >= (index or 0): # type: ignore
-                raise IndexError(f"Cannot read {self.name} for {index}-th dataset from the {value.index}-th dataset") # type: ignore
-            return f"get{self.value[0]}{index or ''} {value.index}" # type: ignore
-
-
-class O(Enum):
-    PotentialAndDensity1D = "1dm"
-    CheckPoint = "chkprdm"
-    ElectronDensity = "den"
-    DensityOfStates = "dos"
-    MResolvedPartialDOS = "dosm"
-    EigenEnergies = "eig"
-    ElectronLocalizedFunction = "elf"
-    FermiSurface = "surf"
-    ElectronDensityGradient = "gden"
-    GeometryAnalysis = "geo"
-    MatrixGKK = "gkk"
-    GSR = "gsr"
-    KleynmanBylanderFormFactors = "kbff"
-    KineticEnergyDensity = "kden"
-    KPointsSets = "kpt"
-    ElectronDensityLaplacian = "lden"
-    Potential = "pot"
-    PSPS = "psps"
-    SpinCurrentDensity = "spcur"
-    STMDensity = "stm"
-    Susceptibility = "suscep"
-    CoulombPotential = "vclmb"
-    HartreePotential = "vha"
-    HartreeANdExchangeCorrelationPotential = "vhxc"
-    Volume = "vol"
-    VolumeForImages = "volimg"
-    LocalPseudoPotential = "vpsp"
-    ExchangeCorrelationPotential = "vxc"
-    WanT = "want"
-    Wavefunction = "wf"
-    FullMeshWavefunction = "wf_full"
-    XML = "xml"
-
-
-class AbIO(Stampable):
-    def __init__(self) -> None:
-        self._in: dict[I, Union[PreviousRun, DataSet, str]] = {}
-        self._out: dict[O, int] = {}
-        self._prefixes = { "out": '', "in": '', "tmp": '' }
-
-    def prefix(self, input: str = '', output: str = '', temporary: str = ''):
-        self._prefixes["in"] = input
-        self._prefixes["out"] = output
-        self._prefixes["tmp"] = temporary
+            assert sel < 2, f"{method._name} can only be read from a file"
+        self._d[method] = value
         return self
-    
-    def print(self, *what: Union[O, Tuple[O,int]]):
-        for o in what:
-            if type(o) is O:
-                self._out[o] = 1
-            elif type(o) is tuple:
-                assert type(o[0]) is O and type(o[1]) is int, f"Print tuple must be (name, int): got ({o[0]}, {o[1]})"
-                self._out[o[0]] = o[1]
-            else:
-                raise ValueError(f"{o} is not a valid print option")
-        return self
+    method._name = ""
+    method._prop = prop
+    return method
 
-    def unprint(self, *what: O):
-        for o in what:
-            assert type(o) is O, f"{o} is not a valid print option"
-            self._out[o] = 0
-        return self
-    
-    def get(self, what: I, _from: Union[PreviousRun, DataSet, str]):
-        what.ok(_from)
-        self._in[what] = _from;
-        return self
+
+class AbIn(Stampable):
+    def __init__(self, prefix: Union[str,None] = None):
+        self._p = prefix
+        self._d: dict[Callable, Union['DataSet', str, PreviousRun]] = dict()
     
     def stamp(self, index: int):
-        suffix = index or ''
-        res: list[str] = []
-        tmp: list[str] = []
-        for (key, path) in self._prefixes.items():
-            if len(path) > 0:
-                tmp.append(f"{key}data_prefix{suffix} \"{path}\"")
-        if len(tmp) > 0:
-            res.extend(tmp)
-        tmp = []
-        if index < 2:
-            for (i, val) in self._in.items():
-                if type(val) is not str:
-                    raise ValueError(f"First dataset can only read variables from files (at {i.name})")
-                tmp.append(i.stamp(val, suffix))
+        head = '' if self._p is None else f"indata_prefix \"{self._p}\"\n"
+        body = '\n'.join(AbIn._print_helper(k,v,index) for k, v in self._d.items())
+        return head + body
+    
+    @staticmethod
+    def _print_helper(m: Callable, v: Union['DataSet', str, PreviousRun], i: int):
+        if type(v) is DataSet:
+            assert v.index < i, f"Cannot read {m._name} for {i}-th dataset from the {v.index}-th dataset"
+            return f"get{m._prop}{i or ''} {v.index}"
+        elif type(v) is PreviousRun:
+            return f"ird{m._prop}{i or ''} 1"
         else:
-            for (i,val) in self._in.items():
-                tmp.append(i.stamp(val, suffix))
-        if len(tmp) > 0:
-            res.extend(tmp)
-        tmp = []
-        for (o,n) in self._out.items():
-            tmp.append(f"prt{o.value}{suffix} {n}")
-        if len(tmp) > 0:
-            res.extend(tmp)
-        return '\n'.join(res)
+            return f"get{m._prop}_filepath{i or ''} \"{v}\""
+            
+    FirstOrderDensity = _AbInMethod("1den")
+    FirstOrderWavefunction = _AbInMethod("1wf")
+    BetheSalpeterCouplingBlock = _AbInMethod("bscoup")
+    BetheSalpeterEigenstates = _AbInMethod("bseig")
+    BetheSalpeterResonantBlock = _AbInMethod("bsreso")
+    DDB = _AbInMethod("ddb",1)
+    DDKWavefunctions = _AbInMethod("ddk")
+    dE = _AbInMethod("delfd")
+    ElectronDensity = _AbInMethod("den",1)
+    dkdE = _AbInMethod("dkde")
+    dkdk = _AbInMethod("dkdk")
+    PotentialDerivative = _AbInMethod("dvdb",1)
+    EffectiveMasses = _AbInMethod("efmas")
+    HaydockRestartFile = _AbInMethod("haydock")
+    OccupationNumbers = _AbInMethod("occ")
+    KSPotential = _AbInMethod("pot",2)
+    QuasiParticleStructure = _AbInMethod("qps")
+    Screening = _AbInMethod("scr",1)
+    SIGEPH = _AbInMethod("sigeph",2)
+    Susceptibility = _AbInMethod("suscep")
+    WavefunctionsK = _AbInMethod("wfk",1)
+    FineWavefunctionsK = _AbInMethod("wfkfine",2)
+    WavefunctionsQ = _AbInMethod("wfq",1)
+
+
+for k,v in AbIn.__dict__.items():
+    if callable(v) and hasattr(v,"_name"):
+        v._name = k
+
+
+def _os(name: str):
+    def method(self: 'AbOut', flag: bool = True):
+        self._d[name] = int(flag)
+        return self
+    return method
+
+
+def _om(name: str, max: int, min: int = 0):
+    def method(self: 'AbOut', value: int):
+        assert type(value) is int and min <= value <= max, f"Value of {stack()[0][3]} must be integer between {min} and {max}"
+        self._d[name] = value
+        return self
+    return method
+
+
+class AbOut(Stampable):
+    def __init__(self, prefix: Union[str,None] = None):
+        self._p = prefix
+        self._d: dict[str, int] = {}
+
+    def stamp(self, index: int):
+        s = index or ''
+        head = '' if self._p is None else f"outdata_prefix{s} \"{self._p}\"\n"
+        body = '\n'.join(f"prt{k}{s} {v}" for k,v in self._d.items())
+        return head + body
+
+    PotentialAndDensity1D = _os("1dm")
+    CheckPoint = _os("chkprdm")
+    ElectronDensity = _os("den")
+    DensityOfStates = _om("dos", 5)
+    MResolvedPartialDOS = _os("dosm")
+    EigenEnergies = _os("eig")
+    ElectronLocalizedFunction = _os("elf")
+    FermiSurface = _os("surf")
+    ElectronDensityGradient = _os("gden")
+    GeometryAnalysis = _os("geo")
+    MatrixGKK = _os("gkk")
+    GSR = _os("gsr")
+    KleynmanBylanderFormFactors = _os("kbff")
+    KineticEnergyDensity = _os("kden")
+    KPointsSets = _os("kpt")
+    ElectronDensityLaplacian = _os("lden")
+    Potential = _os("pot")
+    PSPS = _os("psps")
+    SpinCurrentDensity = _os("spcur")
+    STMDensity = _os("stm")
+    Susceptibility = _os("suscep")
+    CoulombPotential = _os("vclmb")
+    HartreePotential = _os("vha")
+    HartreeANdExchangeCorrelationPotential = _os("vhxc")
+    Volume = _om("vol", 11, -10)
+    ImagesVolume = _os("volimg")
+    LocalPseudoPotential = _os("vpsp")
+    ExchangeCorrelationPotential = _os("vxc")
+    UseWanTInterface = _om("want", 3)
+    Wavefunction = _om("wf", 2, -1)
+    FullMeshWavefunction = _os("wf_full")
+    XML = _os("xml")
 
 
 def createAbi(setup: Union[DataSet,None], *datasets: DataSet):
