@@ -1,8 +1,8 @@
 from ._crystal import Lattice as _Lattice, AtomBasis as _AtomBasis, Atom as _Atom
 from ._occupation import Occupation as _OCC, SpinPolarization as _SP, SpinType as _ST
-from ._kgrid import ManualKGrid as _MKG
+from .kspace import manual as _MKG
 from ._common import Vec3D as _Vec3D, SKO as _SKO
-from typing import Union, Iterable, Tuple
+from typing import Union
 
 __all__ = ["cubic", "FCC", "BCC", "HCP", "uniformBandNumber", "spinUnpolarizedVariableBandNumber"]
 
