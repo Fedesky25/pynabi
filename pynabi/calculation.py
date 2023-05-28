@@ -83,7 +83,6 @@ class Tolerance(_OLS):
 class EnergyCutoff(_OLS):
     name = "ecut"
     def __init__(self, value: float, unit: _U = _def_EU) -> None:
-        assert unit.value == 1, "unit of cutoff energy must be energy"
         assert value > 0, "cutoff energy must be positive"
         super().__init__(f"{value} {unit.name}")
 
