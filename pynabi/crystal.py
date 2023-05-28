@@ -1,5 +1,6 @@
 from ._common import Vec3D as _V, Stampable as _S
-from typing import Optional as _O
+from .units import Pos3D as _P, Length as _L, LUnit as _LU, _def_LU
+from typing import Optional as _O, Union as _U
 
 __all__ = ["Atom", "AtomBasis", "Lattice", "cubic", "BCC", "FCC", "interpenetratingFCC", "HCP"]
 
@@ -61,7 +62,7 @@ typeat{suffix} {' '.join(str(i+1) for i in indexes)}
         
 
 class Lattice(_S):
-    def __init__(self, scaling: _O[_V], prop: _O['tuple[str,str]']):
+    def __init__(self, scaling: _U[_V,_P,None], prop: _O['tuple[str,str]']):
         """Do not use directly: prefer fromAngle, fromPrimitives, setScaling"""
         self.scaling = scaling
         self.prop = prop
@@ -84,7 +85,7 @@ class Lattice(_S):
             return (s or other.scaling is not None) and (p or other.prop is not None)
     
     @staticmethod
-    def fromAngles(angles: _V, scaling: _O[_V] = None):
+    def fromAngles(angles: _V, scaling: _U[_V,_P,None] = None):
         """Constructs lattice from angles [&alpha;, &beta;, &gamma;]
 
         Angles are defined between vectors as follows:
@@ -97,7 +98,7 @@ class Lattice(_S):
         return Lattice(scaling, ("angdeg", str(angles)))
     
     @staticmethod
-    def fromPrimitives(a: _V, b: _V, c: _V, scaling: _O[_V] = None):
+    def fromPrimitives(a: _V, b: _V, c: _V, scaling: _U[_V,_P,None] = None):
         """Construct lattice from primitives [a, b, c]"""
         return Lattice(scaling, ("rprim", f"{a}\n  {b}\n  {c}"))
 
@@ -106,21 +107,28 @@ class Lattice(_S):
         return Lattice(scaling, None)
 
 
-def cubic(a: float, atom: Atom):
+def _2uni(v: _U[float,_L]):
+    t = type(v)
+    if t is _L:
+        return _P.uniform(v) # type: ignore
+    elif t is float:
+        return _V.uniform(v) # type: ignore
+    else:
+        raise TypeError(f"Lattice constant is of wrong value (got {t} instead of float or Length)")
+
+
+def cubic(a: _U[float,_L], atom: Atom):
     return (
         AtomBasis((atom, _V.zero())),
-        Lattice.fromAngles(
-            _V.uniform(90),
-            _V.uniform(a)
-        )
+        Lattice.fromAngles(_V.uniform(90),_2uni(a))
     )
 
-def BCC(a: float, atom: Atom, center: _O[Atom] = None):
+def BCC(a: _U[float,_L], atom: Atom, center: _O[Atom] = None):
     r = cubic(a, atom)
     r[0].add(atom if center is None else center, _V.uniform(0.5))
     return r
 
-def FCC(a: float, atom: Atom, face: _O[Atom] = None):
+def FCC(a: _U[float,_L], atom: Atom, face: _O[Atom] = None):
     r = cubic(a, atom)
     f = atom if face is None else face
     r[0].add(f, _V(0.5,0.5,0.0))
@@ -129,7 +137,7 @@ def FCC(a: float, atom: Atom, face: _O[Atom] = None):
     return r
 
 
-def interpenetratingFCC(a: float, atomA: Atom, atomB: Atom):
+def interpenetratingFCC(a: _U[float,_L], atomA: Atom, atomB: Atom):
     """
     Two interpenetrating FCC crystal (Rhombohedral primitive cell)\n
     Examples: ZincBlende
@@ -138,7 +146,7 @@ def interpenetratingFCC(a: float, atomA: Atom, atomB: Atom):
         _V(0.5, 0.5, 0.0),
         _V(0.0, 0.5, 0.5),
         _V(0.5, 0.0, 0.5),
-        _V.uniform(a)
+        _2uni(a)
     )
     b = AtomBasis(
         (atomA, _V.zero()),
@@ -147,7 +155,7 @@ def interpenetratingFCC(a: float, atomA: Atom, atomB: Atom):
     return (b,l)
 
 
-def HCP(a: float, c: float, atomA: Atom, atomB: Atom):
+def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _LU = _def_LU):
     return (
         AtomBasis(
             (atomA, _V.zero()),
@@ -155,6 +163,6 @@ def HCP(a: float, c: float, atomA: Atom, atomB: Atom):
         ),
         Lattice.fromAngles(
             _V(90,120,90),
-            _V(a,a,c)
+            _P(a,a,c,unit)
         )
     )
