@@ -8,7 +8,6 @@ class LUnit(_E):
     Bohr = 0
     nm = 1
     Angstrom = 2
-    Default = 0
 
     def setAsDefault(self):
         global _def_LU
@@ -44,16 +43,16 @@ class Length:
 
 
 class EUnit(_E):
-    Hartree = 0
+    Ha = 0
     eV = 1
-    Ry = 1
-    K = 1
+    Ry = 3
+    K = 4
 
     def setAsDefault(self):
         global _def_EU
         _def_EU = self
 
-_def_EU = EUnit.Hartree
+_def_EU = EUnit.Ha
 
 
 class Energy:
