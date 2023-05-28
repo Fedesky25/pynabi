@@ -1,6 +1,6 @@
 from typing import Optional as _O, Literal as _L
 from ._common import Stampable as _S, _pos_int, OneLineStamp as _OLS
-from .units import EUnit as _U
+from .units import Energy as _En, EUnit as _EU
 from enum import Enum as _E
 
 
@@ -82,9 +82,13 @@ class Tolerance(_OLS):
 
 class EnergyCutoff(_OLS):
     name = "ecut"
-    def __init__(self, value: float, unit: _U = _U.getDefault()) -> None:
-        assert value > 0, "cutoff energy must be positive"
-        super().__init__(f"{value} {unit.name}")
+    def __init__(self, value: _En) -> None:
+        assert value._v > 0, "cutoff energy must be positive"
+        super().__init__(str(value))
+    
+    @staticmethod
+    def of(value: float, unit: _O[_EU] = None):
+        return EnergyCutoff(_En(value, unit))
 
 
 class MaxSteps(_OLS):
