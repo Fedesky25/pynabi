@@ -1,5 +1,4 @@
 from enum import Enum as _E
-from typing import Union as _U
 
 
 __all__ = ["LUnit", "Pos3D", "Length", "EUnit", "EUnit"]
@@ -12,6 +11,10 @@ class LUnit(_E):
     def setAsDefault(self):
         global _def_LU
         _def_LU = self
+    
+    @staticmethod
+    def getDefault():
+        return _def_LU
 
 _def_LU = LUnit.Bohr
 
@@ -51,6 +54,10 @@ class EUnit(_E):
     def setAsDefault(self):
         global _def_EU
         _def_EU = self
+    
+    @staticmethod
+    def getDefault():
+        return _def_EU
 
 _def_EU = EUnit.Ha
 

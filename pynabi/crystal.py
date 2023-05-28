@@ -1,5 +1,5 @@
 from ._common import Vec3D as _V, Stampable as _S
-from .units import Pos3D as _P, Length as _L, LUnit as _LU, _def_LU
+from .units import Pos3D as _P, Length as _L, LUnit as _LU
 from typing import Optional as _O, Union as _U
 
 __all__ = ["Atom", "AtomBasis", "Lattice", "cubic", "BCC", "FCC", "interpenetratingFCC", "HCP"]
@@ -155,7 +155,7 @@ def interpenetratingFCC(a: _U[float,_L], atomA: Atom, atomB: Atom):
     return (b,l)
 
 
-def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _LU = _def_LU):
+def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _LU = _LU.getDefault()):
     return (
         AtomBasis(
             (atomA, _V.zero()),
