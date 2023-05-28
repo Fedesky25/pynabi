@@ -89,7 +89,7 @@ class AbIn(Stampable):
         else:
             return f"get{m._prop}_filepath{i or ''} \"{v}\""
     
-    def pseudopotential(self, path: str):
+    def PseudoPotentials(self, path: str):
         self._ppd = path;
             
     FirstOrderDensity = _AbInMethod("1den")
