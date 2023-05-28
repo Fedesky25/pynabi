@@ -69,6 +69,7 @@ class AtomBasis(Stampable):
 
 class Lattice(Stampable):
     def __init__(self, scaling: Union[None,Vec3D], prop: Union[None,Tuple[str,str]]):
+        """Do not use directly: prefer fromAngle, fromPrimitives, setScaling"""
         self.scaling = scaling
         self.prop = prop
 
@@ -91,21 +92,21 @@ class Lattice(Stampable):
     
     @staticmethod
     def fromAngles(angles: Vec3D, scaling: Union[None,Vec3D] = None):
-        """Constructs lattice from angles
+        """Constructs lattice from angles [&alpha;, &beta;, &gamma;]
 
         Angles are defined between vectors as follows:
-        | index | from | to |
-        | :----: | :----------: | :-----------: |
-        | 1 | 2 | 3 |
-        | 2 | 1 | 2 |
-        | 3 | 1 | 3 |
+        | angle | from | to |
+        | :---: | :----------: | :-----------: |
+        | &alpha;(1) | b(2) | c(3) |
+        | &beta;(2) | a(1) | c(3) |
+        | &gamma;(3) | a(1) | b(2) |
         """
         return Lattice(scaling, ("angdeg", str(angles)))
     
     @staticmethod
-    def fromPrimitives(x: Vec3D, y: Vec3D, z: Vec3D, scaling: Union[None,Vec3D] = None):
-        """Construct lattice from primitives"""
-        return Lattice(scaling, ("rprim", f"{x}\n  {y}\n  {z}"))
+    def fromPrimitives(a: Vec3D, b: Vec3D, c: Vec3D, scaling: Union[None,Vec3D] = None):
+        """Construct lattice from primitives [a, b, c]"""
+        return Lattice(scaling, ("rprim", f"{a}\n  {b}\n  {c}"))
 
     @staticmethod
     def setScaling(scaling: Vec3D):
