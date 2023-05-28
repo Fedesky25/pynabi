@@ -91,6 +91,7 @@ class AbIn(Stampable):
     
     def PseudoPotentials(self, path: str):
         self._ppd = path;
+        return self
             
     FirstOrderDensity = _AbInMethod("1den")
     FirstOrderWavefunction = _AbInMethod("1wf")
