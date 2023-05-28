@@ -76,7 +76,9 @@ class AbIn(Stampable):
             res.append(f"pp_dirpath{index or ''} \"{self._ppd}\"")
         if self._p is not None:
             res.append(f"indata_prefix{index or ''} \"{self._p}\"")
-        res.append('\n'.join(AbIn._print_helper(k,v,index) for k, v in self._d.items()))
+        body = '\n'.join(AbIn._print_helper(k,v,index) for k, v in self._d.items())
+        if len(body) > 0:
+            res.append(body)
         return '\n'.join(res);
     
     @staticmethod
