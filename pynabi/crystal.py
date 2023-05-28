@@ -155,7 +155,7 @@ def interpenetratingFCC(a: _U[float,_L], atomA: Atom, atomB: Atom):
     return (b,l)
 
 
-def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _LU = _LU.getDefault()):
+def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_LU] = None):
     return (
         AtomBasis(
             (atomA, _V.zero()),
