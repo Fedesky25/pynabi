@@ -1,4 +1,4 @@
-from typing import Union, List, Iterable, Literal, Callable
+from typing import Union, List, Iterable, Literal, Callable, Optional
 from ._common import Stampable
 from ._crystal import AtomBasis, Atom
 from inspect import stack
@@ -65,18 +65,19 @@ def _AbInMethod(prop: str, sel: Literal[0,1,2] = 0):
 
 
 class AbIn(Stampable):
-    def __init__(self, prefix: Union[str,None] = None):
+    def __init__(self, prefix: Optional[str] = None):
         self._p = prefix
         self._d: dict[Callable, Union['DataSet', str, PreviousRun]] = dict()
+        self._ppd: Optional[str] = None
     
     def stamp(self, index: int):
-        body = '\n'.join(AbIn._print_helper(k,v,index) for k, v in self._d.items())
-        if self._p is None:
-            return body
-        elif len(body) == 0:
-            return f"indata_prefix \"{self._p}\""
-        else:
-            return f"indata_prefix \"{self._p}\"\n{body}"
+        res: list[str] = []
+        if self._ppd is not None:
+            res.append(f"pp_dirpath{index or ''} \"{self._ppd}\"")
+        if self._p is not None:
+            res.append(f"indata_prefix{index or ''} \"{self._p}\"")
+        res.append('\n'.join(AbIn._print_helper(k,v,index) for k, v in self._d.items()))
+        return '\n'.join(res);
     
     @staticmethod
     def _print_helper(m: Callable, v: Union['DataSet', str, PreviousRun], i: int):
@@ -87,6 +88,9 @@ class AbIn(Stampable):
             return f"ird{m._prop}{i or ''} 1"
         else:
             return f"get{m._prop}_filepath{i or ''} \"{v}\""
+    
+    def pseudopotential(self, path: str):
+        self._ppd = path;
             
     FirstOrderDensity = _AbInMethod("1den")
     FirstOrderWavefunction = _AbInMethod("1wf")

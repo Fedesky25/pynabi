@@ -38,10 +38,10 @@ pseudos \"{', '.join(a.file for a in atoms)}\""""
 
 
 class AtomBasis(Stampable):
-    def __init__(self, *atoms: 'tuple[Atom,Vec3D]', cartesian: bool = False, pseudosAt: str = '') -> None:
+    def __init__(self, *atoms: 'tuple[Atom,Vec3D]', cartesian: bool = False) -> None:
+        assert len(atoms) > 0, "There must be at least one atom in basis"
         self.atoms = atoms
         self.cartesian = cartesian
-        self.dir = pseudosAt
     
     def add(self, atom: Atom, where: Vec3D):
         if type(self.atoms) is tuple:
@@ -54,17 +54,10 @@ class AtomBasis(Stampable):
     def stamp(self, index: int, pool: List[Atom]):
         indexes = [pool.index(a[0]) for a in self.atoms]
         suffix = str(index or '');
-        res: list[str] = []
-        l = len(indexes)
-        if l > 0:
-            res.append(f"natoms{suffix} {l}")
-            res.append(f"typeat{suffix} {' '.join(str(i+1) for i in indexes)}")
-            x_type = "xcart" if self.cartesian else "xred";
-            x_space = '\n  ' + (' '*(len(x_type)+len(suffix)))
-            res.append(f"{x_type}{suffix} {x_space.join([str(a[1]) for a in self.atoms])}")
-        if len(self.dir) > 0:
-            res.append(f"pp_dirpath{suffix} \"{self.dir}\"")
-        return '\n'.join(res)
+        x_type = "xcart" if self.cartesian else "xred";
+        return f"""natoms{suffix} {len(indexes)}
+typeat{suffix} {' '.join(str(i+1) for i in indexes)}
+{x_type}{suffix} {'   '.join(str(a[1] for a in self.atoms))}"""
         
 
 class Lattice(Stampable):

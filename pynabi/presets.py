@@ -6,25 +6,22 @@ from typing import Union
 
 __all__ = ["cubic", "FCC", "BCC", "HCP", "uniformBandNumber", "spinUnpolarizedVariableBandNumber"]
 
-def cubic(a: float, atom: _Atom, pseudosAt: str = ''):
+def cubic(a: float, atom: _Atom):
     return (
-        _AtomBasis(
-            (atom, _Vec3D.zero()),
-            pseudosAt=pseudosAt
-        ),
+        _AtomBasis((atom, _Vec3D.zero())),
         _Lattice.fromAngles(
             _Vec3D.uniform(90),
             _Vec3D.uniform(a)
         )
     )
 
-def BCC(a: float, atom: _Atom, center: Union[_Atom,None] = None, pseudosAt: str = ''):
-    r = cubic(a, atom, pseudosAt)
+def BCC(a: float, atom: _Atom, center: Union[_Atom,None] = None):
+    r = cubic(a, atom)
     r[0].add(atom if center is None else center, _Vec3D.uniform(0.5))
     return r
 
-def FCC(a: float, atom: _Atom, face: Union[_Atom,None] = None, pseudosAt: str = ''):
-    r = cubic(a, atom, pseudosAt)
+def FCC(a: float, atom: _Atom, face: Union[_Atom,None] = None):
+    r = cubic(a, atom)
     f = atom if face is None else face
     r[0].add(f, _Vec3D(0.5,0.5,0.0))
     r[0].add(f, _Vec3D(0.0,0.5,0.5))
@@ -50,12 +47,11 @@ def interpenetratingFCC(a: float, atomA: _Atom, atomB: _Atom):
     return (b,l)
 
 
-def HCP(a: float, c: float, atomA: _Atom, atomB: _Atom, pseudosAt: str = ''):
+def HCP(a: float, c: float, atomA: _Atom, atomB: _Atom):
     return (
         _AtomBasis(
             (atomA, _Vec3D.zero()),
             (atomB, _Vec3D(2/3, 1/3, 0.5)),
-            pseudosAt=pseudosAt
         ),
         _Lattice.fromAngles(
             _Vec3D(90,120,90),
