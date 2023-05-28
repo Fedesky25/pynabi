@@ -1,12 +1,10 @@
 import sys, os
 sys.path.append(os.getcwd())
 
-from pynabi import createAbi, DataSet, AbIn, AbOut, presets, Atom, Occupation
+from pynabi import createAbi, DataSet, AbIn, AbOut, Occupation
 from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, path, UsualKShifts
 from pynabi.calculation import ToleranceOn, EnergyCutoff, MaxSteps, SCFMixing, NonSelfConsistentCalc
-
-# folder with pseudo potentials
-pseudo_folder = "./pseudos/PBE-SR"
+from pynabi.crystal import Atom, BCC
 
 # create manually an atom 
 # or using sensible defaults as follows
@@ -15,7 +13,8 @@ Si = Atom.of("Si") # Z=14 and pseudos located at "Si.psp8"
 # base dataset with common variables
 base = DataSet(
     AbOut("./scf/scf"),                             # prefixes for output files
-    presets.BCC(5.09, Si, Si, pseudo_folder),       # creates AtomBasis and Lattice of a BCC
+    AbIn().PseudoPotentials("./pseudos/PBE-SR"),    # folder with pseudo potentials
+    BCC(5.09, Si, Si),                              # creates AtomBasis and Lattice of a BCC crystal
     SymmetricGrid(BZ.Irreducible, UsualKShifts.BCC) # easily define kptopt, ngkpt, nshiftk, kpt
         .ofMonkhorstPack(4),
     SCFMixing(density=True).Pulay(10),              # scf cycle with Pulay mixing of the density based on the last 10 iteration
