@@ -57,7 +57,7 @@ class AtomBasis(_S):
         x_type = "xcart" if self.cartesian else "xred";
         return f"""natoms{suffix} {len(indexes)}
 typeat{suffix} {' '.join(str(i+1) for i in indexes)}
-{x_type}{suffix} {'   '.join(str(a[1] for a in self.atoms))}"""
+{x_type}{suffix} {'   '.join(str(a[1]) for a in self.atoms)}"""
         
 
 class Lattice(_S):
