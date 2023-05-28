@@ -141,7 +141,8 @@ ndivsm18 10
 ## Features
 
  - Multi dataset support
- - Helper funtion/methods for common crystal structures (CUB, BCC, FCC, HEX, RHL)
+ - Helper functions for common crystal structures (caesium chloride, rock-salt, fluorite, zincblende, wurtzite, nickeline, HCP)
+ - Registered critical points of and methodsto create lattices of CUB, BCC, FCC, HEX, TET, BCT, ORC, ORCC
  - Smooth experience in defining the k-points
  - Handy management of [file handling variables](https://docs.abinit.org/variables/files/)
  - Almost full covarage of [basic input variables](https://docs.abinit.org/variables/basic/) (missing nbandhf, symrel, tnons, wvl_hgrid)
@@ -151,7 +152,7 @@ ndivsm18 10
 ## Why PynAbi over pure Abinit files?
 
 If you're a very experienced Abinit user who knows its variables and their possible values (and associated meaning), then this package probably isn't for you.
-For all other users, here's a list of reasons why you could find PynAbi useful:
+For all other users, on top of all the aforementioned features, here's a list of reasons why you could find PynAbi useful:
 
  1. You have all the power of coding to generate Abinit instructions, e.g. reusability, loops to generate datasets programmatically
  2. It provides some useful presets and helper functions/methods that allows you to skip to the fun part of the simulation
