@@ -1,9 +1,9 @@
 from ._common import Vec3D, Stampable
-from typing import Union, List, Tuple
+from typing import List, Tuple, Optional
 
 __all__ = ["Atom", "AtomBasis", "Lattice"]
 
-atoms = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U ","Np","Pu","Am","Cm","Bk","Cf","Es","F","Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"]
+_atom_symbols = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U ","Np","Pu","Am","Cm","Bk","Cf","Es","F","Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"]
 
 class Atom:
     def __init__(self, Z: int, file: str):
@@ -12,7 +12,7 @@ class Atom:
         assert self.file.find(",") == -1, "File name cannot contain ','"
     
     def __str__(self) -> str:
-        return f"{atoms[self.num-1]} atom (located at {self.file})"
+        return f"{_atom_symbols[self.num-1]} atom (located at {self.file})"
     
     # def __eq__(self, __value: object) -> bool:
     #     return (self is __value) or (type(__value) is Atom and __value.num == self.num and __value.file == self.file)
@@ -24,7 +24,7 @@ class Atom:
         returns Atom(Z of element, element name + 'psp8')
         """
         try:
-            Z = atoms.index(name) + 1;
+            Z = _atom_symbols.index(name) + 1;
             return Atom(Z, name + '.psp8')
         except:
             raise ValueError(name + " is not a valid atom type")
@@ -61,7 +61,7 @@ typeat{suffix} {' '.join(str(i+1) for i in indexes)}
         
 
 class Lattice(Stampable):
-    def __init__(self, scaling: Union[None,Vec3D], prop: Union[None,Tuple[str,str]]):
+    def __init__(self, scaling: Optional[Vec3D], prop: Optional[Tuple[str,str]]):
         """Do not use directly: prefer fromAngle, fromPrimitives, setScaling"""
         self.scaling = scaling
         self.prop = prop
@@ -75,7 +75,7 @@ class Lattice(Stampable):
             res.append(f"{self.prop[0]}{suffix} {self.prop[1]}")
         return '\n'.join(res)
 
-    def isCompleteWith(self, other: Union['Lattice',None]):
+    def isCompleteWith(self, other: Optional['Lattice']):
         s = self.scaling is not None
         p = self.prop is not None
         if other is None:
@@ -84,7 +84,7 @@ class Lattice(Stampable):
             return (s or other.scaling is not None) and (p or other.prop is not None)
     
     @staticmethod
-    def fromAngles(angles: Vec3D, scaling: Union[None,Vec3D] = None):
+    def fromAngles(angles: Vec3D, scaling: Optional[Vec3D] = None):
         """Constructs lattice from angles [&alpha;, &beta;, &gamma;]
 
         Angles are defined between vectors as follows:
@@ -97,10 +97,64 @@ class Lattice(Stampable):
         return Lattice(scaling, ("angdeg", str(angles)))
     
     @staticmethod
-    def fromPrimitives(a: Vec3D, b: Vec3D, c: Vec3D, scaling: Union[None,Vec3D] = None):
+    def fromPrimitives(a: Vec3D, b: Vec3D, c: Vec3D, scaling: Optional[Vec3D] = None):
         """Construct lattice from primitives [a, b, c]"""
         return Lattice(scaling, ("rprim", f"{a}\n  {b}\n  {c}"))
 
     @staticmethod
     def setScaling(scaling: Vec3D):
         return Lattice(scaling, None)
+
+
+def cubic(a: float, atom: Atom):
+    return (
+        AtomBasis((atom, Vec3D.zero())),
+        Lattice.fromAngles(
+            Vec3D.uniform(90),
+            Vec3D.uniform(a)
+        )
+    )
+
+def BCC(a: float, atom: Atom, center: Optional[Atom] = None):
+    r = cubic(a, atom)
+    r[0].add(atom if center is None else center, Vec3D.uniform(0.5))
+    return r
+
+def FCC(a: float, atom: Atom, face: Optional[Atom] = None):
+    r = cubic(a, atom)
+    f = atom if face is None else face
+    r[0].add(f, Vec3D(0.5,0.5,0.0))
+    r[0].add(f, Vec3D(0.0,0.5,0.5))
+    r[0].add(f, Vec3D(0.5,0.0,0.5))
+    return r
+
+
+def interpenetratingFCC(a: float, atomA: Atom, atomB: Atom):
+    """
+    Two interpenetrating FCC crystal (Rhombohedral primitive cell)\n
+    Examples: ZincBlende
+    """
+    l = Lattice.fromPrimitives(
+        Vec3D(0.5, 0.5, 0.0),
+        Vec3D(0.0, 0.5, 0.5),
+        Vec3D(0.5, 0.0, 0.5),
+        Vec3D.uniform(a)
+    )
+    b = AtomBasis(
+        (atomA, Vec3D.zero()),
+        (atomB, Vec3D.uniform(0.25))
+    )
+    return (b,l)
+
+
+def HCP(a: float, c: float, atomA: Atom, atomB: Atom):
+    return (
+        AtomBasis(
+            (atomA, Vec3D.zero()),
+            (atomB, Vec3D(2/3, 1/3, 0.5)),
+        ),
+        Lattice.fromAngles(
+            Vec3D(90,120,90),
+            Vec3D(a,a,c)
+        )
+    )

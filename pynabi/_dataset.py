@@ -1,6 +1,6 @@
 from typing import Union, List, Iterable, Literal, Callable, Optional
 from ._common import Stampable
-from ._crystal import AtomBasis, Atom
+from .crystal import AtomBasis, Atom
 from inspect import stack
 
 
