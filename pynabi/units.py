@@ -1,7 +1,10 @@
 from enum import Enum as _E
+from typing import Optional as _O
+from ._common import OneLineStamp as _OLS
 
 
 __all__ = ["LUnit", "Pos3D", "Length", "EUnit", "EUnit"]
+
 
 class LUnit(_E):
     Bohr = 0
@@ -20,12 +23,16 @@ _def_LU = LUnit.Bohr
 
 
 class Pos3D:
-    def __init__(self, x: float, y: float, z: float, unit: LUnit = _def_LU) -> None:
+    def __init__(self, x: float, y: float, z: float, unit: _O[LUnit] = None) -> None:
         assert type(unit) is LUnit, f"{unit} is not valid length unit"
         self.x = x
         self.y = y
         self.z = z
-        self.u = unit
+        if unit is None:
+            self.u = _def_LU
+        else:
+            assert type(unit) is LUnit, f"{unit} is not  avlid length unit"
+            self.u = unit
     
     def __str__(self) -> str:
         return f"{self.x} {self.y} {self.z} {self.u.name}"
@@ -36,10 +43,13 @@ class Pos3D:
 
 
 class Length:
-    def __init__(self, value: float, unit: LUnit = _def_LU) -> None:
-        assert type(unit) is LUnit, f"{unit} is not  avlid length unit"
+    def __init__(self, value: float, unit: _O[LUnit] = None) -> None:
         self._v = value
-        self._u = unit
+        if unit is None:
+            self._u = _def_LU
+        else:
+            assert type(unit) is LUnit, f"{unit} is not  avlid length unit"
+            self._u = unit
 
     def __str__(self) -> str:
         return f"{self._v} {self._u.name}"
@@ -63,10 +73,13 @@ _def_EU = EUnit.Ha
 
 
 class Energy:
-    def __init__(self, value: float, unit: EUnit = _def_EU) -> None:
-        assert type(unit) is EUnit, f"{unit} is not valid energy unit"
+    def __init__(self, value: float, unit: _O[EUnit] = None) -> None:
         self._v = value
-        self._u = unit
+        if unit is None:
+            self._u = _def_EU
+        else:
+            assert type(unit) is EUnit, f"{unit} is not valid energy unit"
+            self._u = unit
 
     def __str__(self) -> str:
         return f"{self._v} {self._u.name}"
