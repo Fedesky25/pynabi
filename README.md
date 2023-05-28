@@ -153,7 +153,7 @@ ndivsm18 10
 If you're a very experienced Abinit user who knows its variables and their possible values (and associated meaning), then this package probably isn't for you.
 For all other users, here's a list of reasons why you could find PynAbi useful:
 
- 1. It allows for programmatic use of the datasets, e.g. reusability of instuctions, loop to generate datasets programmatically
+ 1. You have all the power of coding to generate Abinit instructions, e.g. reusability, loops to generate datasets programmatically
  2. It provides some useful presets and helper functions/methods that allows you to skip to the fun part of the simulation
  3. Under the hood, it checks for the validity of variable values *before* starting Abinit
  4. It makes use of expressive declarations and definition, leading to readable and comprehensible istructions
