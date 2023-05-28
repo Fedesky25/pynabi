@@ -31,24 +31,24 @@ def FCC(a: float, atom: _Atom, face: Union[_Atom,None] = None, pseudosAt: str = 
     r[0].add(f, _Vec3D(0.5,0.0,0.5))
     return r
 
-def ZincBlende(a: float, atomA: _Atom, atomB: _Atom, pseudosAt: str = ''):
-    return (
-        _AtomBasis(
-            (atomA, _Vec3D.zero()),
-            (atomA, _Vec3D(0.5,0.5,0.0)),
-            (atomA, _Vec3D(0.0,0.5,0.5)),
-            (atomA, _Vec3D(0.5,0.0,0.5)),
-            (atomB, _Vec3D.uniform(0.25)),
-            (atomB, _Vec3D(0.75, 0.75, 0.25)),
-            (atomB, _Vec3D(0.75, 0.25, 0.75)),
-            (atomB, _Vec3D(0.25, 0.75, 0.75)),
-            pseudosAt=pseudosAt
-        ),
-        _Lattice.fromAngles(
-            _Vec3D.uniform(90),
-            _Vec3D.uniform(a)
-        )
+
+def interpenetratingFCC(a: float, atomA: _Atom, atomB: _Atom):
+    """
+    Two interpenetrating FCC crystal (Rhombohedral primitive cell)\n
+    Examples: ZincBlende
+    """
+    l = _Lattice.fromPrimitives(
+        _Vec3D(0.5, 0.5, 0.0),
+        _Vec3D(0.0, 0.5, 0.5),
+        _Vec3D(0.5, 0.0, 0.5),
+        _Vec3D.uniform(a)
     )
+    b = _AtomBasis(
+        (atomA, _Vec3D.zero()),
+        (atomB, _Vec3D.uniform(0.25))
+    )
+    return (b,l)
+
 
 def HCP(a: float, c: float, atomA: _Atom, atomB: _Atom, pseudosAt: str = ''):
     return (
