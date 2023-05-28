@@ -9,8 +9,9 @@ from pynabi import createAbi, DataSet, AbIn, AbOut, Occupation
 from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, path, UsualKShifts
 from pynabi.calculation import ToleranceOn, EnergyCutoff, MaxSteps, SCFMixing, NonSelfConsistentCalc
 from pynabi.crystal import Atom, BCC
+from pynabi.units import EUnit
 
-# create manually an atom 
+# create manually an atom -> Atom(<Z>, <pseudo potential name>)
 # or using sensible defaults as follows
 Si = Atom.of("Si") # Z=14 and pseudos located at "Si.psp8"
 
@@ -26,8 +27,11 @@ base = DataSet(
     MaxSteps(30)                                    # nstep
 )
 
+# set the default energy unit in eV (from now on)
+EUnit.eV.setAsDefault()
+
 # datasets to see the convergenge as a function of energy
-sets = [DataSet(EnergyCutoff(8.0 + i*0.25)) for i in range(0,17)]
+sets = [DataSet(EnergyCutoff.of(8.0 + i*0.25)) for i in range(0,17)]
 
 # final non-self-consistent round to find bands 
 bands = DataSet(
@@ -71,55 +75,55 @@ toldfe 1e-06
 nstep 30
 
 # DataSet 1
-ecut1 8.0 Hartree
+ecut1 8.0 eV
 
 # DataSet 2
-ecut2 8.25 Hartree
+ecut2 8.25 eV
 
 # DataSet 3
-ecut3 8.5 Hartree
+ecut3 8.5 eV
 
 # DataSet 4
-ecut4 8.75 Hartree
+ecut4 8.75 eV
 
 # DataSet 5
-ecut5 9.0 Hartree
+ecut5 9.0 eV
 
 # DataSet 6
-ecut6 9.25 Hartree
+ecut6 9.25 eV
 
 # DataSet 7
-ecut7 9.5 Hartree
+ecut7 9.5 eV
 
 # DataSet 8
-ecut8 9.75 Hartree
+ecut8 9.75 eV
 
 # DataSet 9
-ecut9 10.0 Hartree
+ecut9 10.0 eV
 
 # DataSet 10
-ecut10 10.25 Hartree
+ecut10 10.25 eV
 
 # DataSet 11
-ecut11 10.5 Hartree
+ecut11 10.5 eV
 
 # DataSet 12
-ecut12 10.75 Hartree
+ecut12 10.75 eV
 
 # DataSet 13
-ecut13 11.0 Hartree
+ecut13 11.0 eV
 
 # DataSet 14
-ecut14 11.25 Hartree
+ecut14 11.25 eV
 
 # DataSet 15
-ecut15 11.5 Hartree
+ecut15 11.5 eV
 
 # DataSet 16
-ecut16 11.75 Hartree
+ecut16 11.75 eV
 
 # DataSet 17
-ecut17 12.0 Hartree
+ecut17 12.0 eV
 
 # DataSet 18
 iscf18 -2

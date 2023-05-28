@@ -5,8 +5,9 @@ from pynabi import createAbi, DataSet, AbIn, AbOut, Occupation
 from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, path, UsualKShifts
 from pynabi.calculation import ToleranceOn, EnergyCutoff, MaxSteps, SCFMixing, NonSelfConsistentCalc
 from pynabi.crystal import Atom, BCC
+from pynabi.units import EUnit
 
-# create manually an atom 
+# create manually an atom -> Atom(<Z>, <pseudo potential name>)
 # or using sensible defaults as follows
 Si = Atom.of("Si") # Z=14 and pseudos located at "Si.psp8"
 
@@ -22,8 +23,11 @@ base = DataSet(
     MaxSteps(30)                                    # nstep
 )
 
+# set the default energy unit in eV (from now on)
+EUnit.eV.setAsDefault()
+
 # datasets to see the convergenge as a function of energy
-sets = [DataSet(EnergyCutoff(8.0 + i*0.25)) for i in range(0,17)]
+sets = [DataSet(EnergyCutoff.of(8.0 + i*0.25)) for i in range(0,17)]
 
 # final non-self-consistent round to find bands 
 bands = DataSet(
