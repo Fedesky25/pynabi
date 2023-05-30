@@ -17,7 +17,7 @@ base = DataSet(
     AbOut("./scf/scf"),                             # prefixes for output files
     AbIn().PseudoPotentials("./pseudos/PBE-SR"),    # folder with pseudo potentials
     FluoriteLike(Zr, Oxy, 5.14),                    # creates AtomBasis and Lattice of a crystal like fluorite
-    SymmetricGrid(BZ.Irreducible, UsualKShifts.BCC) # easily define kptopt, ngkpt, nshiftk, kpt
+    SymmetricGrid(BZ.Irreducible, UsualKShifts.FCC) # easily define kptopt, ngkpt, nshiftk, kpt
         .ofMonkhorstPack(4),
     SCFMixing(density=True).Pulay(10),              # scf cycle with Pulay mixing of the density based on the last 10 iteration
     ToleranceOn.EnergyDifference(1e-6),             # expressively define the tolerance
@@ -35,7 +35,7 @@ bands = DataSet(
     NonSelfConsistentCalc(),
     ToleranceOn.WavefunctionSquaredResidual(1e-12),
     AbIn().ElectronDensity(sets[-1]),               # get the electron density from the last dataset
-    Occupation.Semiconductor(bands=8),              # semiconductor occupation (occopt=1) with 8 bands
+    Occupation.EqualBandNumber(2.0, 8),             # same number of bands (max 8) for each k point
     path(10, "GXWKGLUWLK", CriticalPointsOf.FCC)    # easily define a path in the k-space   
 )
 
