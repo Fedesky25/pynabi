@@ -210,7 +210,7 @@ def FluoriteLike(Ca: Atom, F: Atom, a: _U[float,_L]):
     return (b,l)
 
 
-def ZincBlendeLike(a: _U[float,_L], atomA: Atom, atomB: Atom):
+def ZincBlendeLike(atomA: Atom, atomB: Atom, a: _U[float,_L]):
     """
     Two interpenetrating FCC crystal\n
     Examples:
