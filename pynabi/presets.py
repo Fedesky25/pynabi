@@ -1,7 +1,6 @@
-from ._occupation import Occupation as _OCC, SpinPolarization as _SP, SpinType as _ST
+from .occupation import Occupation as _OCC, SpinPolarization as _SP, SpinType as _ST
 from .kspace import manual as _MKG
 from ._common import Vec3D as _Vec3D, SKO as _SKO
-from typing import Union
 
 __all__ = ["uniformBandNumber", "spinUnpolarizedVariableBandNumber"]
 

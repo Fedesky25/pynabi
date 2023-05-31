@@ -49,7 +49,7 @@ class Occupation(Stampable):
     def stamp(self, index: int):
         s = index or ''
         extra = "".join(f"\n{n}{s} {v}" for (n,v) in self.props.items())
-        return f"occopt{s} {self.option}{band2str(self.bands, s)}{extra}"
+        return f"occopt{s} {self.option}{_band2str(self.bands, s)}{extra}"
     
     @staticmethod
     def EqualBandNumber(occupations: float, bands: int, polarized: bool = False):
@@ -79,7 +79,7 @@ class Occupation(Stampable):
         return Occupation(9, bands, nqfd=carriers, ivalence=valenceIndex)
     
 
-def band2str(b: Union[None,int,Tuple[int]], s):
+def _band2str(b: Union[None,int,Tuple[int]], s):
     if b is None:
         return ''
     s = f"\nnbands{s} "
