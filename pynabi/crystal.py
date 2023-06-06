@@ -1,6 +1,6 @@
 from ._common import Vec3D as _V, Stampable as _S
-from .units import Pos3D as _P, Length as _L, LUnit as _LU
 from typing import Optional as _O, Union as _U
+from .units import Length as _L, Pos3D as _P
 
 __all__ = ["Atom", "AtomBasis", "Lattice", "HCP", "CsClLike", "RockSaltLike", "FluoriteLike", "ZincBlendeLike", "HCP", "WurtziteLike", "NiAsLike"]
 
@@ -131,7 +131,7 @@ class Lattice(_S):
         )
 
     @staticmethod
-    def HEX(a: float, c: float, unit: _O[_LU] = None):
+    def HEX(a: float, c: float, unit: _O[_L] = None):
         return Lattice.fromPrimitives(
             _V(-1.0,0.0,0.0),
             _V(-0.5,0.8660254037844386,0.0),
@@ -140,7 +140,7 @@ class Lattice(_S):
         )
 
     @staticmethod
-    def TET(a: float, c: float, unit: _O[_LU] = None):
+    def TET(a: float, c: float, unit: _O[_L] = None):
         """Simple tetragonal"""
         return Lattice.fromAngles(
             _V.uniform(90),
@@ -148,7 +148,7 @@ class Lattice(_S):
         )
     
     @staticmethod
-    def BCT(a: float, c: float, unit: _O[_LU] = None):
+    def BCT(a: float, c: float, unit: _O[_L] = None):
         """Body-centered tetragonal"""
         return Lattice.fromPrimitives(
             _V(-0.5,0.5,0.5),
@@ -225,7 +225,7 @@ def ZincBlendeLike(atomA: Atom, atomB: Atom, a: _U[float,_L]):
     return (b,l)
 
 
-def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_LU] = None):
+def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_L] = None):
     l = Lattice.HEX(a,c,unit)
     b = AtomBasis(
         (atomA, _V.zero()),
@@ -234,7 +234,7 @@ def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_LU] = None):
     return (b,l)
 
 
-def WurtziteLike(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_LU] = None):
+def WurtziteLike(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_L] = None):
     """
     Two interpenetrating HCP crystal\n
     Examples: wurtzite (ZnS), silver iodide (AgI), zinc oxide (ZnO), cadmium sulfide (CdS), cadmium selenide (CdSe), silicon carbide (α-SiC), gallium nitride (GaN), aluminium nitride (AlN), boron nitride (w-BN)
@@ -249,7 +249,7 @@ def WurtziteLike(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_LU] = N
     return (b,l)
 
 
-def NiAsLike(Ni: Atom, As: Atom, a: float, c: float, unit: _O[_LU] = None):
+def NiAsLike(Ni: Atom, As: Atom, a: float, c: float, unit: _O[_L] = None):
     """
     Iterpenetrating HEX and HCP\n
     Examples: 
