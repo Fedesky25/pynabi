@@ -93,3 +93,6 @@ class MaxSteps(_OLS):
     def __init__(self, value: int) -> None:
         assert type(value) is int and value >= 0, "Number of steps must be an integer greater than or equal to 0"
         super().__init__(value)
+
+
+_exclusives = set((SCFMixing, SCFDirectMinimization, NonSelfConsistentCalc))

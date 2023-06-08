@@ -171,3 +171,6 @@ class OccupationPerBand(Stampable):
                 o = f"{self._r}*{self._o[0]}"
         s = index or ''
         return f"occopt{s} 0\nocc{s} {o}\nbands{s} {b}"
+    
+
+_exclusives = set((Metal, Semiconductor, TwoQuasiFermilevels, OccupationPerBand))
