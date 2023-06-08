@@ -14,7 +14,7 @@ d = DataSet(
     ZincBlendeLike(Si, Si, 7.31),
     SymmetricGrid(BZ.Irreducible,UsualKShifts.FCC)
         .ofMonkhorstPack(2),
-    EnergyCutoff.of(12.0),
+    EnergyCutoff(12.0),
     ToleranceOn.EnergyDifference(1e-6),
     MaxSteps(10)
 )

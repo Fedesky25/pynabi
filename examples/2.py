@@ -14,11 +14,11 @@ base = DataSet(
     ZincBlendeLike(Si, Si, 7.31),
     SymmetricGrid(BZ.Irreducible,UsualKShifts.FCC)
         .ofMonkhorstPack(2),
-    EnergyCutoff.of(12.0),
+    EnergyCutoff(12.0),
     ToleranceOn.EnergyDifference(1e-6)
 )
 
-d = [DataSet(EnergyCutoff.of(8.0 + i)) for i in range(0,9)]
+d = [DataSet(EnergyCutoff(8.0 + i)) for i in range(0,9)]
 
 with open("examples/2.txt", 'w') as file:
     file.write(createAbi(base, *d))
