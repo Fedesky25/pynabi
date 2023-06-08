@@ -1,10 +1,10 @@
 import sys, os
 sys.path.append(os.getcwd())
 
-from pynabi import createAbi, DataSet, AbOut, AbIn, Vec3D
+from pynabi import createAbi, DataSet, AbOut, AbIn
 from pynabi.crystal import Atom, AtomBasis, Lattice
 from pynabi.calculation import EnergyCutoff, ToleranceOn, MaxSteps, NonSelfConsistentCalc
-from pynabi.kspace import SymmetricGrid, BZ, UsualKShifts, path, CriticalPointsOf
+from pynabi.kspace import SymmetricGrid, BZ, UsualKShifts
 from pynabi.occupation import Metal, Smearing
 
 
