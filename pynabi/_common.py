@@ -43,7 +43,7 @@ class StampCollection:
     
     def get(self, t: Type[S]) -> S | None:
         s = self._s.get(t);
-        if s is not None:
+        if s is None:
             s = self._b.get(t)
         return s # type: ignore
     
@@ -81,6 +81,7 @@ class Later(Singleton):
 
 class CanDelay(Stampable): 
     _delayables: Tuple[Tuple[str, str, Callable],...] = ()
+
     def __init__(self, *values):
         self._dv = values;
         for i,v in enumerate(values):
@@ -93,7 +94,7 @@ class CanDelay(Stampable):
     def stamp(self, index: int):
         res: list[str] = []
         s = index or ''
-        for i,v in self._dv:
+        for i,v in enumerate(self._dv):
             if v is not Later._instance:
                 res.append(f"{self._delayables[i][0]}{s} {v}")
         return '\n'.join(res)
