@@ -1,5 +1,5 @@
 from typing import Union, List, Iterable, Literal, Callable, Optional
-from ._common import Stampable
+from ._common import Stampable, Singleton
 from .crystal import AtomBasis, Atom
 from inspect import stack
 
@@ -7,7 +7,10 @@ from inspect import stack
 __all__ = ["DataSet", "PreviousRun", "AbIn", "AbOut", "createAbi"]
 
 
-def splat(i: Iterable[Union[Stampable,Iterable[Stampable]]]) -> Iterable[Stampable]:
+_RS = Union[Stampable,Iterable['_RS']]
+
+
+def splat(i: Iterable[_RS]) -> Iterable[Stampable]:
     for v in i:
         if isinstance(v,Stampable):
             yield v
@@ -19,7 +22,7 @@ def splat(i: Iterable[Union[Stampable,Iterable[Stampable]]]) -> Iterable[Stampab
 
 
 class DataSet:
-    def __init__(self, *stampables: Union[Stampable,Iterable[Stampable]]) -> None:
+    def __init__(self, *stampables: _RS) -> None:
         self.index = 0
         self.atoms: Union[AtomBasis,None] = None
         self.stamps: list[Stampable] = []
@@ -43,12 +46,8 @@ class DataSet:
         return '\n'.join(res)
 
 
-class PreviousRun(object):
-    _instance = None
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = object.__new__(cls)
-        return cls._instance
+class PreviousRun(Singleton):
+    pass
 
 
 def _AbInMethod(prop: str, sel: Literal[0,1,2] = 0):

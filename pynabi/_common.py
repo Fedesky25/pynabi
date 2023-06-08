@@ -3,6 +3,19 @@ from typing import TypeVar, Type, Tuple, Callable
 
 __all__ = ["Vec3D", "SKO"]
 
+
+class Singleton(object):
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+        return cls._instance
+    
+    @classmethod
+    def eq(cls, value):
+        return type(value) is cls or value is cls
+
+
 class Vec3D:
     def __init__(self, x: float, y: float, z: float) -> None:
         self.x = x
@@ -62,12 +75,8 @@ class OneLineStamp(Stampable):
         return f"{t.name}{self.suffix}{index or ''} {self.value}"
 
 
-class Later(object):
-    _instance = None
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = object.__new__(cls)
-        return cls._instance
+class Later(Singleton):
+    pass
 
 
 class CanDelay(Stampable): 
