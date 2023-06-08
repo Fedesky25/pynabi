@@ -6,7 +6,7 @@ from inspect import stack
 from .occupation import _exclusives as _ex1
 from .calculation import _exclusives as _ex2
 
-__excl = [_ex1, _ex2]
+_excl = [_ex1, _ex2]
 
 
 __all__ = ["DataSet", "PreviousRun", "AbIn", "AbOut", "createAbi"]
@@ -51,7 +51,7 @@ class DataSet:
                 else:
                     self.stamps.append(s) # type: ignore
         s = set(self.map.keys())
-        for excl in __excl:
+        for excl in _excl:
             inters = s.intersection(excl)
             if len(inters) > 1:
                 raise ValueError(', '.join(c.__name__ for c in inters) + " are mutually incompatible: please specify only one of them")   
