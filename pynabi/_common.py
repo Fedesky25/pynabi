@@ -110,12 +110,18 @@ class Delayed(Stampable):
     def compatible(self, coll: StampCollection):
         v = coll.get(self.c)
         if v is None:
-            raise TypeError(f"{self.c._delayables[self.i][1]} definition requires {self.c.__name__} definition before")
+            raise TypeError(f"{self.getName()} definition requires {self.c.__name__} definition before")
         if not v._doesDelay(self.i):
-            raise ValueError(f"{self.c.__name__} already defines {self.c._delayables[self.i][1]}")
+            raise ValueError(f"{self.c.__name__} already defines {self.getName()}")
     
     def stamp(self, index: int):
-        return f"{self.c._delayables[self.i][0]}{index or ''} {self.v}"
+        return f"{self.getProp()}{index or ''} {self.v}"
+
+    def getProp(self):
+        return self.c._delayables[self.i][0]
+
+    def getName(self):
+        return self.c._delayables[self.i][1]
 
 
 class SKO:
