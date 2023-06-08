@@ -1,8 +1,6 @@
-from typing import Union, Tuple, Literal, Callable, Type, Optional
+from ._common import Stampable, StampCollection, CanDelay, Delayed, Later
+from typing import Union, Tuple, Literal, Optional
 from enum import Enum
-
-from pynabi._common import StampCollection
-from ._common import Stampable
 
 
 __all__ = ["SpinType", "Metal", "Smearing", "Semiconductor", "TwoQuasiFermilevels", "OccupationPerBand"]
@@ -39,53 +37,6 @@ class Smearing(Enum):
     MethfesselPaxton = 6
     Gaussian = 7
     Uniform = 8
-
-
-class Later(object):
-    _instance = None
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = object.__new__(cls)
-        return cls._instance
-
-
-class CanDelay(Stampable): 
-    _delayables: Tuple[Tuple[str, str, Callable],...] = ()
-    def __init__(self, *values):
-        self._dv = values;
-        for i,v in enumerate(values):
-            if v is not Later._instance:
-                self._delayables[i][2](v)
-
-    def _doesDelay(self, i: int):
-        return self._dv[i] is Later._instance
-    
-    def stamp(self, index: int):
-        res: list[str] = []
-        s = index or ''
-        for i,v in self._dv:
-            if v is not Later._instance:
-                res.append(f"{self._delayables[i][0]}{s} {v}")
-        return '\n'.join(res)
-
-
-class Delayed(Stampable):
-    def __init__(self, cls: Type[CanDelay], index: int, value) -> None:
-        super().__init__() 
-        cls._delayables[index][2](value)
-        self.c = cls
-        self.i = index
-        self.v = value
-    
-    def compatible(self, coll: StampCollection):
-        v = coll.get(self.c)
-        if v is None:
-            raise TypeError(f"{self.c._delayables[self.i][1]} definition requires {self.c.__name__} definition before")
-        if not v._doesDelay(self.i):
-            raise ValueError(f"{self.c.__name__} already defines {self.c._delayables[self.i][1]}")
-    
-    def stamp(self, index: int):
-        return f"{self.c._delayables[self.i][0]}{index or ''} {self.v}"
 
 
 def _checkbands(v):
