@@ -36,7 +36,7 @@ class _AbMeasure:
         return type(self)(-self._v, self._u)
 
     def __str__(self):
-        return f"{self._v} {type(self)._U[self._u][0]}"
+        return f"{self._v} {type(self)._U[self._u][1]}"
     
     def setAsReference(self):
         type(self)._R = (self._v, self._u)

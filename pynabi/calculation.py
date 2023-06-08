@@ -85,7 +85,7 @@ class EnergyCutoff(_OLS):
     def __init__(self, value: _U[float,_En]) -> None:
         e = _En.sanitize(value);
         assert e._v > 0, "cutoff energy must be positive"
-        super().__init__(str(value))
+        super().__init__(str(e))
 
 
 class MaxSteps(_OLS):
