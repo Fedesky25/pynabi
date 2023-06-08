@@ -1,5 +1,5 @@
-from typing import Union, List, Iterable, Literal, Callable, Optional
-from ._common import Stampable, Singleton
+from typing import Union, List, Iterable, Literal, Callable, Optional, Type
+from ._common import Stampable, Singleton, Delayed, StampCollection
 from .crystal import AtomBasis, Atom
 from inspect import stack
 
@@ -26,16 +26,26 @@ class DataSet:
         self.index = 0
         self.atoms: Union[AtomBasis,None] = None
         self.stamps: list[Stampable] = []
-        types = set()
+        self.map: dict[Type[Stampable], Stampable] = {}
+        delayed_props = set()
         for s in splat(stampables):
-            t = type(s)
-            if t in types:
-                raise ValueError(f"Multiple {s.__class__.__name__} given")
-            types.add(t)
-            if t is AtomBasis:
-                self.atoms = s # type: ignore
+            if not isinstance(s, Stampable):
+                raise TypeError(f"{s.__class__.__name__} is not a valid type for a dataset")
+            if isinstance(s, Delayed):
+                p = s.getProp()
+                if p in delayed_props:
+                    raise ValueError(f"Multiple {s.getName()} definition are present")
+                delayed_props.add(p)
             else:
-                self.stamps.append(s) # type: ignore
+                t = type(s)
+                if t in self.map:
+                    raise ValueError(f"Multiple {s.__class__.__name__} given")
+                self.map[t] = s
+                if t is AtomBasis:
+                    self.atoms = s # type: ignore
+                else:
+                    self.stamps.append(s) # type: ignore         
+
     
     def stamp(self, atompool: List[Atom]):
         res: list[str] = []
@@ -204,12 +214,14 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet):
 
     atomSet = set() if setup.atoms is None else set(setup.atoms.getAtoms())
     initialAtomCount = len(atomSet)
-    # isBaseLatticeComplete = setup.lattice is not None and setup.lattice.isCompleteWith(None) 
-    for (i,s) in enumerate(datasets):
-        s.index = i+1
-        # assert isBaseLatticeComplete or (s.lattice is not None and s.lattice.isCompleteWith(setup.lattice)), f"{i}-th lattice is not completely defined"
-        if s.atoms is not None:
-            atomSet = atomSet.union(s.atoms.getAtoms())
+    base_coll = {} if setup is None else setup.map
+    for (i,d) in enumerate(datasets):
+        d.index = i+1
+        coll = StampCollection(d.map, base_coll)
+        for s in d.stamps:
+            s.compatible(coll)
+        if d.atoms is not None:
+            atomSet = atomSet.union(d.atoms.getAtoms())
         elif initialAtomCount == 0:
             raise ValueError(f"All datasets (in particular the {i+1}-th one) must define the atom basis since no common one was defined")
     
@@ -217,8 +229,8 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet):
     res.append(Atom.poolstr(atomPool))
     res.append("\n# Common DataSet")
     res.append(setup.stamp(atomPool))
-    for s in datasets:
-        res.append(f"\n# DataSet {s.index}")
-        res.append(s.stamp(atomPool))
+    for d in datasets:
+        res.append(f"\n# DataSet {d.index}")
+        res.append(d.stamp(atomPool))
     return '\n'.join(res)
     
