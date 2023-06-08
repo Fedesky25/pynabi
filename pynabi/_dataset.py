@@ -41,6 +41,7 @@ class DataSet:
                 if p in delayed_props:
                     raise ValueError(f"Multiple {s.getName()} definition are present")
                 delayed_props.add(p)
+                self.stamps.append(s)
             else:
                 t = type(s)
                 if t in self.map:
