@@ -5,7 +5,7 @@ from pynabi import createAbi, DataSet, AbIn, AbOut
 from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, path, UsualKShifts
 from pynabi.calculation import ToleranceOn, EnergyCutoff, MaxSteps, SCFMixing, NonSelfConsistentCalc
 from pynabi.crystal import Atom, FluoriteLike
-from pynabi.occupation import Occupation
+from pynabi.occupation import OccupationPerBand
 from pynabi.units import eV, nm
 
 # create manually an atom -> Atom(<Z>, <pseudo potential name>)
@@ -42,7 +42,7 @@ bands = DataSet(
     NonSelfConsistentCalc(),
     ToleranceOn.WavefunctionSquaredResidual(1e-12),
     AbIn().ElectronDensity(sets[-1]),               # get the electron density from the last dataset
-    Occupation.EqualBandNumber(2.0, 8),             # same number of bands (max 8) for each k point
+    OccupationPerBand(2.0, repeat=8),               # same number of bands (max 8) for each k point
     path(10, "GXWKGLUWLK", CriticalPointsOf.FCC)    # easily define a path in the k-space   
 )
 
