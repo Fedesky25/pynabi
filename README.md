@@ -2,6 +2,10 @@
 
 Python package to easily create [Abinit](https://www.abinit.org/) input files.
 
+```cmd
+pip install pynabi==0.0.3
+```
+
 ## Example
 
 ```python
@@ -167,4 +171,4 @@ Some prior knowledge of Abinit (and DFT in general) is nonetheless needed to ful
 
 ## Documentation
 
-_coming soon_
+Although currently severely incomplete, a wiki is available on the [GitHub repository Wiki](https://github.com/Fedesky25/pynabi/wiki). Ideally a wiki for this package shouldn't be needed if your editor has some autocompletition: the aim is to document every class and function with a detailed description taken from the relevant parts of ABINIT documentation. 
