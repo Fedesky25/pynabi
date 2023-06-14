@@ -5,11 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pynabi"
 version = "0.0.3"
-authors = [
-  { name="Federico Guglielmi" },
-]
 description = "A package to easily create Abinit input files"
+keywords = [ "abinit" ]
+license = { file = "LICENSE" }
 readme = "README.md"
+authors = [
+  { name="Federico Guglielmi" }
+]
 requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
