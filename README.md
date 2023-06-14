@@ -149,6 +149,7 @@ ndivsm18 10
  - Handy management of [file handling variables](https://docs.abinit.org/variables/files/)
  - Almost full covarage of [basic input variables](https://docs.abinit.org/variables/basic/) (missing nbandhf, symrel, tnons, wvl_hgrid)
  - Partial coverage of [ground state variables](https://docs.abinit.org/variables/gstate/)
+ - Partial coverage of [relaxation variables](https://docs.abinit.org/variables/rlx/)
  - _More to come..._
 
 ## Why PynAbi over pure Abinit files?
