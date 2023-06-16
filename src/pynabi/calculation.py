@@ -8,15 +8,11 @@ __all__ = ["SCFDirectMinimization", "SCFMixing", "NonSelfConsistentCalc", "Toler
 
 
 class SCFDirectMinimization(_S):
-    def __init__(self, steps: _O[int] = None) -> None:
-        self._s = steps
+    def __init__(self) -> None:
+        super().__init__()
     
     def stamp(self, index: int):
-        s = index or ''
-        r = f"iscf{s} 0"
-        if self._s is not None:
-            r = r + f"\nnsteps{s} {self._s}"
-        return r
+        return f"iscf{index or ''} 0"
 
 
 class SCFMixing(_S):
