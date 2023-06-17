@@ -1,4 +1,5 @@
 from typing import Union as _Un, Optional as _Op, Tuple as _Tu, Self as  _Self, Any as _Any
+from ._common import Vec3D as _V
 
 class _AbMeasure:
     _U: _Tu[_Tu[float, str],...] = ()
@@ -58,7 +59,7 @@ class _AbMeasure:
         elif t is cls:
             return value
         else:
-            raise TypeError(f"Cannot construct {cls.__name__} from {value} ({t})")
+            raise TypeError(f"Cannot construct {cls.__name__} from {value} (of type {t})")
         
     @classmethod
     def getDefaultReference(cls):
@@ -110,3 +111,13 @@ class Pos3D:
     @staticmethod
     def uniform(l: _Un[float,'Length']):
         return Pos3D(1,1,1,Length.sanitize(l))
+    
+    @staticmethod
+    def sanitize(v: _Any) -> 'Pos3D':
+        t = type(v)
+        if t is Pos3D:
+            return v
+        elif t is _V:
+            return Pos3D(v.x,v.y,v.z)
+        else:
+            raise TypeError(f"Cannot construct Pos3D from {v} (of type {t})")
