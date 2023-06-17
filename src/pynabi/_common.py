@@ -1,7 +1,9 @@
-from typing import TypeVar, Type, Tuple, Callable
+from typing import TypeVar, Type, Tuple, Callable, Any, TypeGuard
+
+from pynabi._common import StampCollection
 
 
-__all__ = ["Vec3D", "SKO"]
+__all__ = ["Vec3D"]
 
 
 class Singleton(object):
@@ -138,6 +140,54 @@ def sectionTitle(index: int, name: str):
     else:
         return f"\n# {name}"
     
+
+def decorate_IWD_method(fn):
+    def method(self: 'IndexedWithDefault', *args):
+        assert self._index is None, f"Multiple definitions for {type(self).__name__}"
+        return fn(self, *args)
+    return method
+
+
+class IndexedWithDefault(Stampable):
+    _default: str = ""
+    _prop: str = ""
     
-def _pos_int(v):
+    def __init__(self) -> None:
+        super().__init__()
+        self._index: int|None = None
+        self._extra: dict[str, Any] = {}
+    
+    def __init_subclass__(cls, default: str, prop: str = "") -> None:
+        super().__init_subclass__()
+        cls._prop = prop
+        if not callable(getattr(cls, default, 0)): # 0 is not callable
+            raise AttributeError(f"Property {default} of {cls.__name__} is not callable")
+        for (name,method) in cls.__dict__.items():
+            if callable(method) and not hasattr(IndexedWithDefault, name):
+                setattr(cls, name, decorate_IWD_method(method))
+    
+    def stamp(self, index: int):
+        s = index or ''
+        if self._index is None:
+            getattr(self,self._default)()
+        res = f"{self._prop}{s} {self._index}"
+        extra = '\n'.join(f"{k}{s} {v}" for (k,v) in self._extra.items())
+        if len(extra) > 0:
+            res += '\n' + extra
+        return res
+
+
+def _pos_int(v) -> TypeGuard[int]:
     return type(v) is int and v > 0
+
+
+def _pos0_int(v) -> TypeGuard[int]:
+    return type(v) is int and v >= 0
+
+
+def _pos_num(v) -> TypeGuard[float|int]:
+    return type(v) is float or type(v) is int and v > 0
+
+
+def _pos0_num(v) -> TypeGuard[float|int]:
+    return type(v) is float or type(v) is int and v >= 0
