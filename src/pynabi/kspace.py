@@ -1,4 +1,4 @@
-from ._common import Vec3D as _V, Stampable as _Stmp, _pos_int
+from ._common import Vec3D as _V, Stampable as _Stmp, _pos_int, _pos_num
 from enum import Enum as _E
 from typing import Dict as _dict, Any as _any, Union as _union, Tuple as _tuple, Iterable as _iter
 
@@ -135,7 +135,7 @@ class SymmetricGrid:
     
 
     def automatic(self, length: float = 30.0):
-        assert length > 0, "Real space length used for automatic k grid must be positive"
+        assert _pos_num(length), "Real space length used for automatic k grid must be positive"
         return KSpaceDefinition(self._sy.value, { "kptrlen": length })
 
 
