@@ -1,13 +1,9 @@
-from ._common import Stampable as _S, StampCollection as _SC
+from ._common import Stampable as _S, StampCollection as _SC, _pos_num, _pos0_num, IndexedWithDefault as _IWD
 from .units import Energy as _En
-from typing import Any as _A, Literal as _L, Tuple as _T
+from typing import Literal as _L, Tuple as _T
 
 
-# TODO: missing ionmov 28
-
-
-def _pos_num(v):
-    return (type(v) is int or type(v) is float) and v >= 0
+# TODO: missing ionmov 20, 28
 
 
 # class FixedAtoms(_S):
@@ -28,65 +24,42 @@ def _mdtemp(v):
     return f"[{v[0]},{v[1]}]"
 
 
-# class _MD_SO_def:
-#     def __init__(self, fn) -> None:
-#         self.fn = fn
-    
-#     def __call__(self, *args: _A, **kwds: _A) -> _A:
-#         self.fn(*args, **kwds)
-    
-#     def __set_name__(self, owner: type, name: str):
-#         setattr(owner, "_def", self.fn)
-#         setattr(owner, name, self.fn) # replace ourselves with the original method
-
-
-class _MD_SO(_S):
+class _MD_SO(_IWD, default="__init__", prop="ionmov"):
     def __init__(self, timeStep: float = 100, maxSteps: int = 1000) -> None:
         super().__init__()
         assert _pos_num(timeStep), "time step (for molecular dynamics or structural optimization) must be a positive number"
         assert type(maxSteps) is int and maxSteps > 0, "number of maximum steps (for molecular dynamics or structural optimization) must be a positive integer"
         self._dt = timeStep
         self._ms = maxSteps
-        self._n = 0
-        self._d: dict[str,_A] = {}
     
     def stamp(self, index: int):
         s = index or ''
-        r = f"ionmov{s} {self._n}"
-        extra = '\n'.join(f"{k}{s} {v}" for (k,v) in self._d.items())
-        if len(extra) > 0:
-            r += "\n" + extra
-        return r
-    
-    def compatible(self, coll: _SC):
-        assert self._n != 0, f"Incomplete definition of {type(self).__name__}"
+        return super().stamp(index) + f"\ndtion{s} {self._dt}\nntime{s} {self._ms}"
 
 
-class MolecularDynamics(_MD_SO):
+class MolecularDynamics(_MD_SO, default="basic"):
     """Move atoms using molecular dynamics"""
 
     def compatible(self, coll: _SC):
-        if self._n != 13: # isoenthaplic is the only one that accept cell optimization
+        if self._index != 13: # isoenthaplic is the only one that accept cell optimization
             _check_co(coll, "Molecular dynamics")
     
     def basic(self):
         """Move atoms using undumped molecular dynamics\n
         For viscous damping use `StructuralOptimization(...).damping(...)`"""
-        self._n = 1
-        self._d = {"vis": 0}
+        self._index = 1
+        self._extra = {"vis": 0}
         return self
 
     def Verlet(self):
         """Molecular dynamics using the Verlet algorithm, see [[Allen1987a]](https://docs.abinit.org/theory/bibliography#allen1987a) p 81"""
-        self._n = 6
-        self._d = {}
+        self._index = 6
         return self
 
     def quenchedVerlet(self):
         """Quenched Molecular dynamics using the Verlet algorithm, and stopping each atom for which the scalar product of velocity and force is negative.\n
         The goal is not to produce a realistic dynamics, but to go as fast as possible to the minimum. For this purpose, it is advised to set all the masses to the same value"""
-        self._n = 7
-        self._d = {}
+        self._index = 7
         return self
     
     def NoseHoover(self, inertia: float = 100, temperatures: _T[float, float] = (200,300)):
@@ -98,8 +71,8 @@ class MolecularDynamics(_MD_SO):
         `temperatures` is a tuple of floats who represent the initial and final temperatures of the thermostat
         """
         assert _pos_num(inertia), "thermostat intertia must a positive number"
-        self._n = 8
-        self._d = { "mdtemp": _mdtemp(temperatures), "noseinert": inertia }
+        self._index = 8
+        self._extra = { "mdtemp": _mdtemp(temperatures), "noseinert": inertia }
         return self
 
     def Langevin(self, friction: float, temperatures: _T[float, float] = (200,300)):
@@ -111,8 +84,8 @@ class MolecularDynamics(_MD_SO):
         `temperatures` is a tuple of floats who represent the initial and final temperatures of the dynamics
         """
         assert _pos_num(friction), "thermostat intertia must a positive number"
-        self._n = 9
-        self._d = { "mdtemp": _mdtemp(temperatures), "friction": friction }
+        self._index = 9
+        self._extra = { "mdtemp": _mdtemp(temperatures), "friction": friction }
         return self
     
     def isokinetic(self, temperature: float = 200):
@@ -121,15 +94,14 @@ class MolecularDynamics(_MD_SO):
         The velocity is initialized from the given temperature (in Kelvin)
         """
         assert _pos_num(temperature), "The temperature must be a positive number"
-        self._n = 12
-        self._d = { "mdtemp": f"[{temperature},{temperature+1}]" }
+        self._index = 12
+        self._extra = { "mdtemp": f"[{temperature},{temperature+1}]" }
         return self
 
     def SRKNa14(self):
         """Simple molecular dynamics with a symplectic algorithm proposed in [[Blanes2002]](https://docs.abinit.org/theory/bibliography#blanes2002) (called SRKNa14) of the kind first published in [[Yoshida1990]](https://docs.abinit.org/theory/bibliography#bitzek2006). This algorithm requires at least 14 evaluation of the forces (actually 15 are done within Abinit) per time step. At this cost it usually gives much better energy conservation than the verlet algorithm for a 30 times bigger value of time step.\n
         NOTE: the potential energy of the initial atomic configuration is never evaluated using this algorithm."""
-        self._n = 14
-        self._d = {}
+        self._index = 14
         return self
 
     def learnOnTheFly(self, iterations: int = 10):
@@ -143,28 +115,27 @@ class MolecularDynamics(_MD_SO):
         NOTE: LOTF has to be enabled at configure time. If LOTF is not enabled, abinit will set automatically isokinetic MD.\n
          """
         assert type(iterations) is int and iterations > 0, "Number of LOTF iterations must be a positive integer"
-        self._n = 23
-        self._d = {"lotf_nitex": iterations }
+        self._index = 23
+        self._extra = {"lotf_nitex": iterations }
         return self
 
     def constantEnergy(self):
         """Simple constant energy molecular dynamics using the velocity Verlet symplectic algorithm (second order), see [[Hairer2003]](https://docs.abinit.org/theory/bibliography#hairer2003)."""
-        self._n = 24
-        self._d = {}
+        self._index = 24
         return self
 
 
-class StructuralOptimization(_MD_SO):
+class StructuralOptimization(_MD_SO, default="BFGS"):
     def compatible(self, coll: _SC):
-        if self._n not in (2, 3, 22):
+        if self._index not in (2, 3, 22):
             _check_co(coll, "Structural optimization")
 
     def damping(self, viscosity: float = 100):
         """Move atoms using molecular dynamics with viscous damping (friction linearly proportional to velocity). \n
         The implemented algorithm is the generalisation of the Numerov technique (6th order), but is NOT invariant upon time-reversal, so that the energy is not conserved."""
         assert _pos_num(viscosity), "Viscosity must be a positive number"
-        self._n = 1
-        self._d = {"vis": viscosity}
+        self._index = 1
+        self._extra = {"vis": viscosity}
         return self
 
     def BFGS(self, delocalizedCoordinates: bool = False, withEnergy: bool = False):
@@ -174,15 +145,13 @@ class StructuralOptimization(_MD_SO):
         """
         assert type(delocalizedCoordinates) is bool, "delocalizedCoordinates must be a bool"
         assert type(withEnergy) is bool, "withEnergy must be a bool"
-        self._n = 2 + 8*int(delocalizedCoordinates) + int(withEnergy)
-        self._d = {}
+        self._index = 2 + 8*int(delocalizedCoordinates) + int(withEnergy)
         return self
     
     def conjugateGradient(self):
         """Conjugate gradient algorithm for simultaneous optimization of potential and ionic degrees of freedom.\n
         WARNING: this is under development, and does not work very well in m_A cases"""
-        self._n = 4
-        self._d = {}
+        self._index = 4
         return self
 
     def simpleRelaxation(self, preconditioning: _L[-1, 0, 1, 2] = 0):
@@ -191,8 +160,8 @@ class StructuralOptimization(_MD_SO):
         In particular: hessian is 2^(-preconditioning) times the identity matrix
         """
         assert type(preconditioning) is int and -1 <= preconditioning <= 2, "preconditioning must a integer between -1 and 2"
-        self._n = 5
-        self._d = { "iprcfc": preconditioning }
+        self._index = 5
+        self._extra = { "iprcfc": preconditioning }
         return self
 
     # def directInversion(self):
@@ -204,8 +173,7 @@ class StructuralOptimization(_MD_SO):
         """Conduct structural optimization using the Limited-memory Broyden-Fletcher-Goldfarb-Shanno minimization (L-BFGS) [[Nocedal1980]](https://docs.abinit.org/theory/bibliography#nocedal1980). 
         The routines are based on the original implementation by J. Nocedal available on netlib.org. 
         This algorithm can be much better than the native implementation of BFGS in ABINIT"""
-        self._n = 22
-        self._d = {}
+        self._index = 22
         return self
 
 
@@ -292,7 +260,7 @@ class CellOptimizationOnVector(_S):
 class MaxLatticeDilatation(_S):
     def __init__(self, additional: float = 0, exceed: bool = False) -> None:
         super().__init__()
-        assert _pos_num(additional), "Additional percentage of memory must be a positive number"
+        assert _pos0_num(additional), "Additional percentage of memory must be a positive number"
         if not exceed:
             assert additional <= 15, "Additional percentage of memory must be less than or equal to 15 (when exceed is False)"
         self.a = additional
