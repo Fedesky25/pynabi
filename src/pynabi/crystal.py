@@ -1,4 +1,4 @@
-from ._common import Vec3D as _V, Stampable as _S
+from ._common import Vec3D as _V, Stampable as _S, _pos_int
 from typing import Optional as _O, Union as _U
 from .units import Length as _L, Pos3D as _P
 
@@ -8,6 +8,7 @@ _atom_symbols = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si"
 
 class Atom:
     def __init__(self, Z: int, file: str):
+        assert _pos_int(Z), "Atomic number must be a positive integer"
         self.num = Z
         self.file = file
         assert self.file.find(",") == -1, "File name cannot contain ','"
@@ -22,7 +23,7 @@ class Atom:
     def of(name: str):
         """Constructs an atom using default filenaming
         
-        returns Atom(Z of element, element name + 'psp8')
+        returns Atom(Z of element, element name + '.psp8')
         """
         try:
             Z = _atom_symbols.index(name) + 1;
@@ -40,6 +41,8 @@ pseudos \"{', '.join(a.file for a in atoms)}\""""
 
 class AtomBasis(_S):
     def __init__(self, *atoms: 'tuple[Atom,_V]', cartesian: bool = False) -> None:
+        """Construct an atom basis given a sequence of tuples containing an atom and a position (Vec3D)\n
+        If `cartesian` is True, the coordinates of the atoms' position are cartesian instead of reduced."""
         assert len(atoms) > 0, "There must be at least one atom in basis"
         self.atoms = atoms
         self.cartesian = cartesian
@@ -62,6 +65,7 @@ typeat{suffix} {' '.join(str(i+1) for i in indexes)}
 
     @staticmethod
     def ofOne(atom: Atom):
+        """Construct an atom basis with only one atom (placed at Vec3D(0,0,0))"""
         return AtomBasis((atom, _V.zero()))
 
 
@@ -97,7 +101,8 @@ class Lattice(_S):
         | &beta;(2) | a(1) | c(3) |
         | &gamma;(3) | a(1) | b(2) |
         """
-        return Lattice(acell=scaling, angdeg=angles)
+        assert type(angles) is _V, "Angles must be of type Vec3D"
+        return Lattice(acell=_P.sanitize(scaling), angdeg=angles)
     
     @staticmethod
     def fromPrimitives(a: _V, b: _V, c: _V, scaling: _U[_V,_P]):
@@ -105,7 +110,8 @@ class Lattice(_S):
         Construct lattice from primitives [a, b, c]\n
         Scaling is applied to the cartesian axis
         """
-        return Lattice(scalecart=scaling, rprim=f"{a}   {b}   {c}")
+        assert type(a) is _V and type(b) is _V and type(c) is _V, "Primitive vectors must be of type Vec3D"
+        return Lattice(scalecart=_P.sanitize(scaling), rprim=f"{a}   {b}   {c}")
     
     @staticmethod
     def CUB(a: _U[float,_L]):
@@ -226,6 +232,7 @@ def ZincBlendeLike(atomA: Atom, atomB: Atom, a: _U[float,_L]):
 
 
 def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_L] = None):
+    """Hexagonal Close Packet crystal"""
     l = Lattice.HEX(a,c,unit)
     b = AtomBasis(
         (atomA, _V.zero()),
@@ -270,9 +277,3 @@ def NiAsLike(Ni: Atom, As: Atom, a: float, c: float, unit: _O[_L] = None):
         (As, _V(1/3, 2/3, 0.75))
     )
     return (b,l)
-
-
-# def BCT(atomA: Atom, atomB: Atom, a: float, c: float, unit: _O[_LU] = None):
-#     l = Lattice.TET(a,c,unit)
-#     b = AtomBasis((atomA, _V.zero()),(atomB, _V.uniform(0.5)))
-#     return (b,l)
