@@ -1,5 +1,5 @@
 from typing import Optional as _O, Literal as _L, Union as _U
-from ._common import Stampable as _S, _pos_int, OneLineStamp as _OLS
+from ._common import Stampable as _S, _pos_int, OneLineStamp as _OLS, IndexedWithDefault as _IWD
 from .units import Energy as _En
 from enum import Enum as _E
 
@@ -15,40 +15,30 @@ class SCFDirectMinimization(_S):
         return f"iscf{index or ''} 0"
 
 
-class SCFMixing(_S):
-    def __init__(self, density: bool = False):
-        self._i: _O[int] = None
-        self._d = density
-        self._p: _O[int] = None
+class SCFMixing(_IWD, default="Pulay", prop="iscf"):
+    """Usual ground state (GS) calculations or for structural relaxations, where the potential has to be determined self-consistently"""
 
+    def __init__(self, density: bool = False) -> None:
+        super().__init__()
+        self._den = density
+    
     def Simple(self):
-        self._i = 2
+        self._index = 2 + 10*int(self._den)
         return self
 
     def Anderson(self, onPrevious: bool = False):
-        self._i = 4 if onPrevious else 3
+        self._index = (4 if onPrevious else 3) + 10*int(self._den)
         return self
 
     def CGBased(self, alt: bool = False):
-        self._i = 6 if alt else 5
+        self._index = (6 if alt else 5) + 10*int(self._den)
         return self
 
     def Pulay(self, iterations: int = 7):
         assert _pos_int(iterations), "Number of iterations used in Pulay mixing must be a positive integer"
-        self._i = 7
-        self._p = iterations
+        self._index = 7 + 10*int(self._den)
+        self._extra = { "npulayit": iterations }
         return self
-    
-    def stamp(self, index: int):
-        s = index or ''
-        res: list[str] = []
-        if self._i is not None:
-            res.append(f"iscf{s} {self._i+10 if self._d else self._i}")
-        if self._p is not None:
-            res.append(f"npulayit{s} {self._p}")
-        if len(res) == 0:
-            print("Warning: empty SCFMixing")
-        return '\n'.join(res)
 
 
 class NonSelfConsistentCalc(_S):
