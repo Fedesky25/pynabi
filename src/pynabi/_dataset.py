@@ -37,9 +37,9 @@ class DataSet:
             if not isinstance(s, Stampable):
                 raise TypeError(f"{s.__class__.__name__} is not a valid type for a dataset")
             if isinstance(s, Delayed):
-                p = s.getProp()
+                p = s.d.prop
                 if p in delayed_props:
-                    raise ValueError(f"Multiple {s.getName()} definition are present")
+                    raise ValueError(f"Multiple {s.d.name} definition are present")
                 delayed_props.add(p)
                 self.stamps.append(s)
             else:
@@ -209,7 +209,8 @@ class AbOut(Stampable):
     XML = _os("xml")
 
 
-def createAbi(setup: Union[DataSet,None], *datasets: DataSet):
+def createAbi(setup: Union[DataSet,None], *datasets: DataSet) -> str:
+    """Given one optional base dataset and multiple subsequent datasets, it constructs the abinit input file and returns it as a string"""
     n = len(datasets)
     if setup is None:
         if n == 0:
