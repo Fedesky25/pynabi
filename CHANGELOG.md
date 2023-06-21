@@ -1,5 +1,11 @@
 # PynAbi Changelog
 
+## 0.0.4
+
+ * `SCFDirectMinimization` does not take steps as argument (already taken by `MaxSteps`)
+ * Refactor using `IndexedWithDefault` to cut down boilerplate code
+ * Refactor of the delaying code: `DelayedInfo` has been added and a delayed value now can be of type different from input
+
 ## 0.0.3 and previous
 
  * File handling thorugh `AbIn` and `AbOut`
