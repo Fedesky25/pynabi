@@ -81,14 +81,34 @@ class Later(Singleton):
     pass
 
 
+class DelayedInfo:
+    def __init__(self, prop: str, name: str) -> None:
+        self.prop = prop
+        self.name = name
+
+    def sanitize(self, value):
+        raise NotImplementedError()
+    
+    def laterOrSanitized(self, value):
+        return value if value is Later._instance else self.sanitize(value)
+    
+    def stamp(self, suffix, value):
+        return f"{self.prop}{suffix} {value}"
+    
+    @staticmethod
+    def basic(fn: Callable[[Any],bool], msg: str):
+        class Child(DelayedInfo):
+            def sanitize(self, value):
+                assert fn(value), f"{self.name} {msg}"
+                return value
+        return Child
+
+
 class CanDelay(Stampable): 
-    _delayables: Tuple[Tuple[str, str, Callable],...] = ()
+    _delayables: Tuple[DelayedInfo,...] = ()
 
     def __init__(self, *values):
-        self._dv = values;
-        for i,v in enumerate(values):
-            if v is not Later._instance:
-                self._delayables[i][2](v)
+        self._dv = tuple(self._delayables[i].laterOrSanitized(v) for i,v in enumerate(values))
 
     def _doesDelay(self, i: int):
         return self._dv[i] is Later._instance
@@ -98,33 +118,34 @@ class CanDelay(Stampable):
         s = index or ''
         for i,v in enumerate(self._dv):
             if v is not Later._instance:
-                res.append(f"{self._delayables[i][0]}{s} {v}")
+                res.append(self._delayables[i].stamp(s,v))
         return '\n'.join(res)
 
 
 class Delayed(Stampable):
     def __init__(self, cls: Type[CanDelay], index: int, value) -> None:
-        super().__init__() 
-        cls._delayables[index][2](value)
+        super().__init__()
         self.c = cls
         self.i = index
-        self.v = value
+        self.d = cls._delayables[index]
+        self.v = self.d.sanitize(value)
     
     def compatible(self, coll: StampCollection):
         v = coll.get(self.c)
         if v is None:
-            raise TypeError(f"{self.getName()} definition requires {self.c.__name__} definition before")
+            raise TypeError(f"{self.d.name} definition requires {self.c.__name__} definition before")
         if not v._doesDelay(self.i):
-            raise ValueError(f"{self.c.__name__} already defines {self.getName()}")
+            raise ValueError(f"{self.c.__name__} already defines {self.d.name}")
     
     def stamp(self, index: int):
-        return f"{self.getProp()}{index or ''} {self.v}"
+        return self.d.stamp(index or '', self.v)
 
-    def getProp(self):
-        return self.c._delayables[self.i][0]
 
-    def getName(self):
-        return self.c._delayables[self.i][1]
+def delayer(index: int, T: Type, use: Type[Delayed] = Delayed):
+    @classmethod
+    def fn(cls, value: T):
+        return use(cls, index, value)
+    return fn
 
 
 class SKO:
