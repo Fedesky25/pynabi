@@ -2,6 +2,7 @@
 
 ## 0.0.4
 
+ * __Breaking__: refactor of `kspace` -> there are now three specialized (mutually exclusive) classes `ManualGrid`, `SymmetricGrid`, `AutomaticGrid`, `Path`
  * `SCFDirectMinimization` does not take steps as argument (already taken by `MaxSteps`)
  * Refactor using `IndexedWithDefault` to cut down boilerplate code
  * Refactor of the delaying code: `DelayedInfo` has been added and a delayed value now can be of type different from input
