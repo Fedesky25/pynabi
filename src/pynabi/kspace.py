@@ -304,4 +304,4 @@ class Path(_Stmp):
         return Path(p, "ndivk", ' '.join(str(v) for v in d))
 
 
-_ex = (ManualGrid, SymmetricGrid, AutomaticGrid, Path)
+_exclusives = (ManualGrid, SymmetricGrid, AutomaticGrid, Path)

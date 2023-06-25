@@ -5,8 +5,9 @@ from inspect import stack
 
 from .occupation import _exclusives as _ex1
 from .calculation import _exclusives as _ex2
+from .kspace import _exclusives as _ex3
 
-_excl = [_ex1, _ex2]
+_excl = [_ex1, _ex2, _ex3]
 
 
 __all__ = ["DataSet", "PreviousRun", "AbIn", "AbOut", "createAbi"]
