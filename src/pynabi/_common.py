@@ -120,6 +120,8 @@ class CanDelay(Stampable):
             if v is not Later._instance:
                 res.append(self._delayables[i].stamp(s,v))
         return '\n'.join(res)
+    
+    info = DelayedInfo # for ease of access
 
 
 class Delayed(Stampable):
