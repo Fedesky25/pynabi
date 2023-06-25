@@ -1,12 +1,13 @@
-from ._common import Vec3D as _V, Stampable as _Stmp, _pos_int, _pos_num
+from ._common import Vec3D as _V, Stampable as _Stmp, _pos_int, _pos_num, CanDelay as _CD, Delayed as _D, Later as _L
 from enum import Enum as _E
 from typing import Dict as _dict, Any as _any, Union as _union, Tuple as _tuple, Iterable as _iter
 
 
-__all__ = ["BZ", "CriticalPointsOf", "manual", "SymmetricGrid", "UsualKShifts", "path"]
+__all__ = ["BZ", "CriticalPointsOf", "manual", "SymmetricGrid", "UsualKShifts", "Path"]
 
 
 class BZ(_E):
+    """Brillouin Zone symmetries required to setup a symmetric grid"""
     Irreducible = 1
     Half = 2
     Full = 3
@@ -105,77 +106,211 @@ def manual(*points: _V, normalize: float = 1.0):
     })
 
 
-class SymmetricGrid:
-    def __init__(self, symmetry: BZ, shifts: _union[_tuple[_V,...], UsualKShifts] = ()):
-        self._sy = symmetry
-        if type(shifts) is UsualKShifts:
-            self._sh = shifts.value
-        elif type(shifts) is tuple:
-            assert all(type(v) is _V for v in shifts), "K Shifts must be vectors"
-            self._sh = shifts
+def _parse_shifts(value: _tuple[_V,...]|UsualKShifts) -> _tuple[_V,...]:
+    if type(value) is UsualKShifts:
+        return value.value
+    elif type(value) is tuple:
+        assert all(type(v) is _V for v in value), "K Shifts must be vectors"
+        return value
+    else:
+        raise TypeError("Invalid type of k shifts")
+
+
+class _D_grid_points(_CD.info):
+    def sanitize(self, value):
+        t = type(value)
+        if t is int:
+            assert value > 0, f"{self.name} must be positive (if integer)"
+            return (value,value,value)
+        elif t is tuple:
+            assert len(value) == 3 and all(_pos_int(v) for v in value), f"{self.name} must be a tuple of three positive integers"
+            return value
         else:
-            raise TypeError("Invalid type of k shifts")
+            raise TypeError(f"{self.name} must be either a positive integer or a tuple of 3 positive integers")
+
+    def stamp(self, suffix, value):
+        return f"{self.prop}{suffix} {value[0]} {value[1]} {value[2]}"
+
+
+class _D_super_lattice(_CD.info):
+    def sanitize(self, value):
+        try:
+            assert type(value) is tuple and len(value) == 3
+            assert all(type(v) is _V for v in value) 
+            return value
+        except:
+            raise TypeError(f"{self.name} must be three Vec3D")
     
-    def _u(self, n: str, v: str):
-        assert len(self._sh) > 0, "There must be at least one k shift"
-        return KSpaceDefinition(self._sy.value, {
-            "nshiftk": len(self._sh),
-            "shiftk": "   ".join(str(s) for s in self._sh),
-            n: v
-        })
+    def stamp(self, suffix, value):
+        s = '  '.join(str(v) for v in value)
+        return f"{self.prop}{suffix} {s}"
+
+
+class SymmetricGrid(_CD):
+    """Constructs a grid of k-points in the reciprocal space leveraging a symmetry of the Brillouin Zone"""
+
+    _delayables = (
+        _D_grid_points("ngkpt", "Number of grid points"),
+        _D_super_lattice("kptrlatt", "Super lattice vectors")
+    )
+
+    def __init__(self, symmetry: BZ, shifts: _union[_tuple[_V,...], UsualKShifts] = ()):
+        super().__init__(_L(),_L())
+        assert type(symmetry) is BZ, "Symmetry must one of the entries of BZ"
+        self.sym = symmetry
+        self.shi = _parse_shifts(shifts)
+        self.type = -1
     
-    def ofMonkhorstPack(self, a: int, b: _union[int,None] = None, c: _union[int,None] = None):
-        b = a if b is None else b
-        c = a if c is None else c
-        assert _pos_int(a) and _pos_int(b) and _pos_int(c), "Number of k points in Monkhorst-Pack grid must be a positive integer"
-        return self._u("ngkpt", f"{a} {b} {c}")
+    def _doesDelay(self, i: int):
+        return self.type == i and super()._doesDelay(i)
+    
+    def ofMonkhorstPack(self, gridPointsNumber: int|tuple[int,int,int]|_L = _L()):
+        self.type = 0
+        self._dv = (self._delayables[0].laterOrSanitized(gridPointsNumber), _L())
+        return self
     
     def fromSuperLattice(self, a: _V, b: _V, c: _V):
-        return self._u("kptrlatt", f"{a} {b} {c}")
+        self.type = 1
+        self._dv = (_L(), self._delayables[1].laterOrSanitized((a,b,c)))
+        return self
     
+    @classmethod
+    def setMPgridPointNumber(cls, num: int|tuple[int,int,int]):
+        return _D(cls, 0, num)
+    
+    @classmethod
+    def setSuperLatticeVectors(cls, a: _V, b: _V, c: _V):
+        return _D(cls, 1, (a,b,c))
 
-    def automatic(self, length: float = 30.0):
-        assert _pos_num(length), "Real space length used for automatic k grid must be positive"
-        return KSpaceDefinition(self._sy.value, { "kptrlen": length })
+
+class AutomaticGrid(_Stmp):
+    """ABINIT will automatically generate a large set of possible k point grids, and select among this set, the grids that give a length of smallest vector larger than the provided lenght.
+    
+    Note that this procedure can be time-consuming. It is worth doing it once for a given unit cell and set of symmetries, but not use this procedure by default. The best is then to use `AbOut().KPointsSets()`, in order to get a detailed analysis of the set of grids."""
+
+    def __init__(self, symmetry: BZ, length: float = 30.0):
+        self.sym = symmetry
+        self.len = length
+    
+    def stamp(self, index: int):
+        s = index or ''
+        return f"kptopt{s} {self.sym.value}\nkptrlen{s} {self.len}"
 
 
-def setMPGridPointsNumber(number: _union[int, _tuple[int, int, int]]):
-    if type(number) is tuple:
-        assert len(number) == 3, "numbers of k points must be three"
-        assert all(_pos_int(v) for v in number), "numbers of k points must be positive integers"
-        return KSpaceDefinition(100, { "ngkpt": f"{number[0]} {number[1]} {number[2]}" })
+def _parse_crit_point(c: str, s: dict[str,_V]):
+    if c == 'G':
+        return _V.zero()
     else:
-        assert _pos_int(number), "Number of k points (per primitive) must be a positive integer"
-        return KSpaceDefinition(100, { "ngkpt": f"{number} {number} {number}" })
+        assert c in s, f"(critical) point '{c}' is not defined"
+        assert type(s[c]) is _V, f"type of critial point '{c}' is not Vec3D"
+        return s[c]
 
 
-def path(divisions: _union[int,_tuple[int,...]], points: _union[str,_iter[_union[str,_V]]], pointSet: _union[CriticalPointsOf,_dict[str,_V]] = {}):
-    s: dict[str,_V] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
-    b: list[_V] = []
-    for p in points:
-        if type(p) is str:
-            for c in p:
-                if c == 'G':
-                    b.append(_V.zero())
-                else:
-                    assert c in s, f"(critical) point '{c}' is not defined"
-                    b.append(s[c])
-        elif type(p) is _V:
-            b.append(p)
+class Path(_Stmp):
+    """A path though points in the reciprocal space"""
+
+    def __init__(self, points: list[_V]|tuple[_V], prop: str, val: str) -> None:
+        """DO NOT USE this constructor"""
+        super().__init__()
+        self.points = points
+        self.prop = prop
+        self.val = val
+    
+    def stamp(self, index: int):
+        s = index or ''
+        bounds = '  '.join(str(v) for v in self.points)
+        return f"kptopt{s} {1-len(self.points)}\nkptbounds{s} {bounds}\n{self.prop}{s} {self.val}"
+
+    @staticmethod
+    def auto(minDivisions: int, points: str|_iter[_union[str,_V]], pointSet: CriticalPointsOf|_dict[str,_V] = {}):
+        """Path through k points. The number of division for each segment is scaled based on the length and `minDivisions`, the number of division of the smallest segment.
+        
+        ## Example
+        ```python
+        # this path
+        p1 = Path.auto(10, (
+            V.zero(),
+            V(0.0, 0.5, 0.5),
+            V.uniform(0.5),
+            V(0.25, 0.75, 0.5)
+        ))
+        # is equivalent to
+        p2 = Path.auto(10, "GXLW", CriticalPointsOf.FCC)
+
+        # You don't have to sacrifice the comfort of strings 
+        # to pass through non critical points
+        p3 = Path.auto(10, ("GX", V(0.25,0.5,0.4), "LW"), CriticalPointsOf.FCC)
+
+        # For some application, it could be useful to define
+        # custom critical points and use them
+        ccp = {
+            'A': V(0.25,0.5,0.75),
+            'B': V(0.75,0.5,0.25),
+            'C': V(-0.5,0.25,0.4)
+        }
+        p4 = Path.auto(10, "GABGC", ccp) # note that 'G' is always (0,0,0)
+        ```"""
+        assert _pos_int(minDivisions), "Smallest division must be a positive integer"
+        s: dict[str,_V] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
+        b: list[_V] = []
+        for p in points:
+            if type(p) is str:
+                for c in p:
+                    b.append(_parse_crit_point(c,s))
+            elif type(p) is _V:
+                b.append(p)
+            else:
+                raise TypeError(f"Invalid type of k-path point (got {type(p)})")
+        assert len(b) > 1, "Number of boundaries must be at least 2 (i.e. one segment)"
+        return Path(b, "ndivsm", str(minDivisions))
+    
+    @staticmethod
+    def manual(*args: int|_V|str, pointSet: CriticalPointsOf|_dict[str,_V] = {}):
+        """Path though k points where each segment has its own number of divisions. To specify points and divisions, the arguments must be a sequence of alternating positive integers and k points, starting and eending in a k point.
+
+        ## Example
+        ```python
+        # this path
+        p1 = Path.manual( V.zero(), 10, V(0.0, 0.5, 0.5), 15, V.uniform(0.5), 20, V(0.25, 0.75, 0.5))
+        # is equivalent to
+        p2 = Path.auto('G',10,'X',15,'L',20,'W', pointSet=CriticalPointsOf.FCC)
+
+        # You don't have to sacrifice the comfort of strings 
+        # to pass through non critical points
+        p3 = Path.auto('G',10,'X',18,V(0.25,0.5,0.4),12,'L',15,'W', pointSet=CriticalPointsOf.FCC)
+
+        # For some application, it could be useful to define
+        # custom critical points and use them
+        ccp = {
+            'A': V(0.25,0.5,0.75),
+            'B': V(0.75,0.5,0.25),
+            'C': V(-0.5,0.25,0.4)
+        }
+        p4 = Path.auto('G',7,'A',8,'B',16'G',10,'C', pointSet=ccp) # note that 'G' is always (0,0,0)
+        ```"""
+        s: dict[str,_V] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
+        p: list[_V] = []
+        d: list[int] = []
+        assert len(args) & 1, "Invalid path sequence"
+        for i in range(0, len(args)-1, 2):
+            t = type(args[i])
+            if t is str:
+                p.append(_parse_crit_point(args[i],s)) # type: ignore
+            elif t is _V:
+                p.append(args[i]) # type: ignore
+            else:
+                raise TypeError(f"Element number {i+1} must be a vector or a critical point name")
+            assert _pos_int(args[i+1]), f"Number of divisions must be a positive integer (at position {i+2})"
+            d.append(args[i+1]) # type: ignore
+        last = args[len(args)-1]
+        t = type(last)
+        if t is str:
+            p.append(_parse_crit_point(last,s)) # type: ignore
+        elif t is _V:
+            p.append(last) # type: ignore
         else:
-            raise TypeError(f"Invalid type of k-path point (got {type(p)})")
-    assert len(b) > 1, "Number of boundaries must be at least 2 (i.e. one segment)"
-    
-    if type(divisions) is tuple:
-        assert len(divisions) == len(b)-1, f"lenght of division must be equal to number of segments: got {len(divisions)} instead of {len(b)-1}"
-        assert all(_pos_int(v) for v in divisions), "Number of division per segment must be all positive"
-        return KSpaceDefinition(1-len(b), { 
-            "kptbounds": "   ".join(str(v) for v in b), 
-            "ndivk": ' '.join(str(d) for d in divisions)
-        })
-    else:
-        assert _pos_int(divisions), "number of division (for smallest segment) must be positive"
-        return KSpaceDefinition(1-len(b), { 
-            "kptbounds": "   ".join(str(v) for v in b), 
-            "ndivsm": divisions
-        })
+            raise TypeError(f"Last element must be a vector or a critical point name")
+        return Path(p, "ndivk", ' '.join(str(v) for v in d))
+
+
+_ex = (SymmetricGrid, AutomaticGrid, Path)
