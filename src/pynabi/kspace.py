@@ -3,7 +3,7 @@ from enum import Enum as _E
 from typing import Dict as _dict, Any as _any, Union as _union, Tuple as _tuple, Iterable as _iter
 
 
-__all__ = ["BZ", "CriticalPointsOf", "manual", "SymmetricGrid", "UsualKShifts", "Path"]
+__all__ = ["BZ", "CriticalPointsOf", "ManualGrid", "SymmetricGrid", "UsualKShifts", "Path"]
 
 
 class BZ(_E):
@@ -84,26 +84,17 @@ class UsualKShifts(_E):
     HEX = (_V(1.0,0.0,0.0), _V(-0.5,0.8660254037844386,0.0), _V(0.0,0.0,1.0))
 
 
-class KSpaceDefinition(_Stmp):
-    def __init__(self, option: int, props: _dict[str, _any]) -> None:
-        super().__init__()
-        self.kptop = option
-        self.props = props
+class ManualGrid(_Stmp):
+    def __init__(self, *points: _V, normalize: float = 1.0) -> None:
+        assert all(type(v) is _V for v in points), "Points of the manual grid must be Vec3D"
+        assert normalize >= 1, "k-points normalization faction cannot be lower than 1"
+        self.p = points
+        self.n = normalize
     
     def stamp(self, index: int):
         s = index or ''
-        head = '' if self.kptop == 100 else f"kptopt{s} {self.kptop}\n"
-        body = '\n'.join(f"{k}{s} {v}" for k,v in self.props.items())
-        return f"{head}{body}"
-
-
-def manual(*points: _V, normalize: float = 1.0):
-    assert normalize >= 1, "k-points normalization faction cannot be lower than 1"
-    return KSpaceDefinition(0, {
-        "nkpt": len(points),
-        "kpt": "   ".join(str(v) for v in points),
-        "kptnrm": normalize
-    })
+        kpt = "   ".join(str(v) for v in self.p)
+        return f"kptopt{s} 0\nnkpt{s} {len(self.p)}\nkpt{s} {kpt}\nkptnrm{s} {self.n}"
 
 
 def _parse_shifts(value: _tuple[_V,...]|UsualKShifts) -> _tuple[_V,...]:
@@ -313,4 +304,4 @@ class Path(_Stmp):
         return Path(p, "ndivk", ' '.join(str(v) for v in d))
 
 
-_ex = (SymmetricGrid, AutomaticGrid, Path)
+_ex = (ManualGrid, SymmetricGrid, AutomaticGrid, Path)
