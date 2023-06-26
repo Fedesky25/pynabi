@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pynabi"
-version = "0.0.3"
+version = "0.0.4"
 description = "A package to easily create Abinit input files"
 keywords = [ "abinit" ]
 license = { file = "LICENSE" }
@@ -15,6 +15,18 @@ authors = [
 requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/Fedesky25/pynabi"
+"Bug Tracker" = "https://github.com/Fedesky25/pynabi/issues"
+"Documentation" = "https://github.com/Fedesky25/pynabi/wiki"
+"Repository" = "https://github.com/Fedesky25/pynabi.git"
+"Changelog" = "https://github.com/Fedesky25/pynabi/blob/master/CHANGELOG.md"
