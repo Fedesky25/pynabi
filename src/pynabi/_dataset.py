@@ -1,4 +1,4 @@
-from typing import Union, List, Iterable, Literal, Callable, Optional, Type
+from typing import Union, List, Iterable, Literal, Callable, Optional, Type, TypeVar
 from ._common import Stampable, Singleton, Delayed, StampCollection
 from .crystal import AtomBasis, Atom
 from inspect import stack
@@ -10,7 +10,7 @@ from .kspace import _exclusives as _ex3
 _excl = [_ex1, _ex2, _ex3]
 
 
-__all__ = ["DataSet", "PreviousRun", "AbIn", "AbOut", "createAbi"]
+__all__ = ["DataSet", "PreviousRun", "AbIn", "AbOut", "createAbi", "append"]
 
 
 _RS = Union[Stampable,Iterable['_RS']]
@@ -33,15 +33,18 @@ class DataSet:
         self.atoms: Union[AtomBasis,None] = None
         self.stamps: list[Stampable] = []
         self.map: dict[Type[Stampable], Stampable] = {}
-        delayed_props = set()
+        self.delayeds = set()
+        self._append(stampables)
+            
+    def _append(self, *stampables: _RS):
         for s in splat(stampables):
             if not isinstance(s, Stampable):
                 raise TypeError(f"{s.__class__.__name__} is not a valid type for a dataset")
             if isinstance(s, Delayed):
                 p = s.d.prop
-                if p in delayed_props:
+                if p in self.delayeds:
                     raise ValueError(f"Multiple {s.d.name} definition are present")
-                delayed_props.add(p)
+                self.delayeds.add(p)
                 self.stamps.append(s)
             else:
                 t = type(s)
@@ -56,8 +59,7 @@ class DataSet:
         for excl in _excl:
             inters = s.intersection(excl)
             if len(inters) > 1:
-                raise ValueError(', '.join(c.__name__ for c in inters) + " are mutually incompatible: please specify only one of them")   
-
+                raise ValueError(', '.join(c.__name__ for c in inters) + " are mutually incompatible: please specify only one of them") 
     
     def stamp(self, atompool: List[Atom]):
         res: list[str] = []
@@ -66,6 +68,12 @@ class DataSet:
         for s in self.stamps:
             res.append(s.stamp(self.index))
         return '\n'.join(res)
+    
+T = TypeVar("T", bound=Iterable[DataSet])
+def append(what: _RS, to: T) -> T:
+    for d in to:
+        d._append(what)
+    return to
 
 
 class PreviousRun(Singleton):
