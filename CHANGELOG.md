@@ -1,5 +1,10 @@
 # PynAbi Changelog
 
+## 0.1.1
+
+ * Fix: `CanDelay` in same dataset of one of its `Delayed` properties must delay that property
+ * Feature: you can now append stampable to groups of datsets to cut down repeated code
+
 ## 0.1.0
 
  * __Breaking__: refactor of `kspace` -> there are now three specialized (mutually exclusive) classes `ManualGrid`, `SymmetricGrid`, `AutomaticGrid`, `Path`
