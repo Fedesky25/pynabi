@@ -133,9 +133,9 @@ class Delayed(Stampable):
     def compatible(self, coll: StampCollection):
         v = coll.get(self.c)
         if v is None:
-            raise TypeError(f"{self.d.name} definition requires {self.c.__name__} definition before")
-        if not v._doesDelay(self.i) and coll.nextto(self.c):
-            raise ValueError(f"{self.c.__name__} already defines {self.d.name} in the same dataset")
+            raise TypeError(f"{self.d.name} definition requires also a {self.c.__name__} definition in the base or current dataset")
+        if coll.nextto(self.c):
+            assert v._doesDelay(self.i), f"Adjacent {self.c.__name__} does not delay {self.d.name}"
     
     def stamp(self, index: int):
         return self.d.stamp(index or '', self.v)
