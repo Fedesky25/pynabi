@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pynabi"
-version = "0.1.0"
+version = "0.1.1"
 description = "A package to easily create Abinit input files"
 keywords = [ "abinit" ]
 license = { file = "LICENSE" }
