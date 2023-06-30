@@ -6,6 +6,7 @@
  * Refactor using `IndexedWithDefault` to cut down boilerplate code
  * Refactor of the delaying code: `DelayedInfo` has been added and a delayed value now can be of type different from input
  * `SCFDirectMinimization` does not take steps as argument (already taken by `MaxSteps`)
+ * Reject delayed value only if already defined in same dataset
 
 ## 0.0.3 and previous
 

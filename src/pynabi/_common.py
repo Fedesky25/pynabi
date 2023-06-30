@@ -134,8 +134,8 @@ class Delayed(Stampable):
         v = coll.get(self.c)
         if v is None:
             raise TypeError(f"{self.d.name} definition requires {self.c.__name__} definition before")
-        if not v._doesDelay(self.i):
-            raise ValueError(f"{self.c.__name__} already defines {self.d.name}")
+        if not v._doesDelay(self.i) and coll.nextto(self.c):
+            raise ValueError(f"{self.c.__name__} already defines {self.d.name} in the same dataset")
     
     def stamp(self, index: int):
         return self.d.stamp(index or '', self.v)
