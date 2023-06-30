@@ -1,8 +1,11 @@
 import sys, os
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd()+"\\src")
+# TODO: find the correct way to import pynabi for testing purposes
+# ================================================================
+
 
 from pynabi import createAbi, DataSet, AbIn, AbOut
-from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, path, UsualKShifts
+from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, UsualKShifts, Path
 from pynabi.calculation import ToleranceOn, EnergyCutoff, MaxSteps, SCFMixing, NonSelfConsistentCalc
 from pynabi.crystal import Atom, FluoriteLike
 from pynabi.occupation import OccupationPerBand
@@ -41,10 +44,10 @@ sets = [DataSet(EnergyCutoff(8.0 + i*0.25)) for i in range(0,17)]
 bands = DataSet(
     NonSelfConsistentCalc(),
     ToleranceOn.WavefunctionSquaredResidual(1e-12),
-    AbIn().ElectronDensity(sets[-1]),               # get the electron density from the last dataset
-    OccupationPerBand(2.0, repeat=8),               # same number of bands (max 8) for each k point
-    path(10, "GXWKGLUWLK", CriticalPointsOf.FCC)    # easily define a path in the k-space   
+    AbIn().ElectronDensity(sets[-1]),                   # get the electron density from the last dataset
+    OccupationPerBand(2.0, repeat=8),                   # same number of bands (max 8) for each k point
+    Path.auto(10, "GXWKGLUWLK", CriticalPointsOf.FCC)   # easily define a path in the k-space   
 )
 
-with open("./out.txt", 'w') as f:
+with open("./examples/index.txt", 'w') as f:
     f.write(createAbi(base, *sets, bands))

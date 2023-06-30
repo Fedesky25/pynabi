@@ -1,5 +1,8 @@
 import sys, os
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd()+"\\src")
+# TODO: find the correct way to import pynabi for testing purposes
+# ================================================================
+
 
 from pynabi import createAbi, DataSet, AbOut, AbIn
 from pynabi.crystal import Atom, AtomBasis, Lattice
@@ -17,7 +20,7 @@ base = DataSet(
     AtomBasis.ofOne(Atom.of("Al")),
     Lattice.FCC(7.626),
     EnergyCutoff(14.0),
-    Metal(Smearing.Marzari5634, 0.04)
+    Metal(Smearing.Marzari5634, broadening=0.04)
 )
 
 scf = DataSet(

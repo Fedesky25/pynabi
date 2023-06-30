@@ -1,10 +1,13 @@
 import sys, os
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd()+"\\src")
+# TODO: find the correct way to import pynabi for testing purposes
+# ================================================================
+
 
 from pynabi import createAbi, DataSet, AbOut, AbIn
 from pynabi.crystal import Atom, ZincBlendeLike
 from pynabi.calculation import EnergyCutoff, ToleranceOn, SCFMixing, MaxSteps
-from pynabi.kspace import SymmetricGrid, BZ, UsualKShifts, path, CriticalPointsOf
+from pynabi.kspace import SymmetricGrid, BZ, UsualKShifts, Path, CriticalPointsOf
 from pynabi.occupation import OccupationPerBand
 
 
@@ -28,7 +31,7 @@ scf = DataSet(
 bands = DataSet(
     AbIn().ElectronDensity(scf),
     ToleranceOn.WavefunctionSquaredResidual(1e-12),
-    path(10, "GXWLGKX", CriticalPointsOf.FCC),
+    Path.auto(10, "GXWLGKX", CriticalPointsOf.FCC),
     OccupationPerBand(1.0, repeat=8)
 )
 

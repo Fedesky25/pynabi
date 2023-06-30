@@ -1,5 +1,8 @@
 import sys, os
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd()+"\\src")
+# TODO: find the correct way to import pynabi for testing purposes
+# ================================================================
+
 
 from pynabi import createAbi, DataSet, AbOut, AbIn
 from pynabi.crystal import ZincBlendeLike, Atom

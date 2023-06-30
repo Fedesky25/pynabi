@@ -1,5 +1,8 @@
 import sys, os
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd()+"\\src")
+# TODO: find the correct way to import pynabi for testing purposes
+# ================================================================
+
 
 from pynabi import createAbi, DataSet, AbOut, AbIn
 from pynabi.crystal import Atom, Lattice, AtomBasis
@@ -19,7 +22,7 @@ d = DataSet(
         .ofMonkhorstPack(2),
     EnergyCutoff(12.0),
     ToleranceOn.EnergyDifference(1e-6),
-    Metal(Smearing.Marzari5634, 0.05, 16),
+    Metal(Smearing.Marzari5634, broadening=0.05, bands=16),
     SpinType.SpinOrbitCoupling
 )
 
