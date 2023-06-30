@@ -9,11 +9,12 @@ pip install pynabi==0.0.3
 ## Example
 
 ```python
-from pynabi import createAbi, DataSet, AbIn, AbOut, Occupation
-from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, path, UsualKShifts
+from pynabi import createAbi, DataSet, AbIn, AbOut
+from pynabi.kspace import CriticalPointsOf, BZ, SymmetricGrid, UsualKShifts, Path
 from pynabi.calculation import ToleranceOn, EnergyCutoff, MaxSteps, SCFMixing, NonSelfConsistentCalc
 from pynabi.crystal import Atom, FluoriteLike
-from pynabi.units import EUnit
+from pynabi.occupation import OccupationPerBand
+from pynabi.units import eV, nm
 
 # create manually an atom -> Atom(<Z>, <pseudo potential name>)
 # or using sensible defaults as follows
@@ -22,29 +23,35 @@ Oxy = Atom.of("O")  # Z=8 and pseudos located at "O.psp8"
 
 # base dataset with common variables
 base = DataSet(
-    AbOut("./scf/scf"),                             # prefixes for output files
+    AbOut("./scf/scf"),                             # prefix for output files
     AbIn().PseudoPotentials("./pseudos/PBE-SR"),    # folder with pseudo potentials
-    FluoriteLike(Zr, Oxy, 5.14),                    # creates AtomBasis and Lattice of a crystal like fluorite
+
+    FluoriteLike(Zr, Oxy, 0.5135*nm),               # creates AtomBasis and Lattice of a crystal like fluorite
+                                                    # with lattice constant 0.5135nm
+
     SymmetricGrid(BZ.Irreducible, UsualKShifts.FCC) # easily define kptopt, ngkpt, nshiftk, kpt
         .ofMonkhorstPack(4),
-    SCFMixing(density=True).Pulay(10),              # scf cycle with Pulay mixing of the density based on the last 10 iteration
+
+    SCFMixing(density=True).Pulay(10),              # scf cycle with Pulay mixing of the density 
+                                                    # based on the last 10 iteration
+
     ToleranceOn.EnergyDifference(1e-6),             # expressively define the tolerance
     MaxSteps(30)                                    # nstep
 )
 
 # set the default energy unit in eV (from now on)
-EUnit.eV.setAsDefault()
+eV.setAsReference()
 
 # datasets to see the convergenge as a function of energy
-sets = [DataSet(EnergyCutoff.of(8.0 + i*0.25)) for i in range(0,17)]
+sets = [DataSet(EnergyCutoff(8.0 + i*0.25)) for i in range(0,17)]
 
 # final non-self-consistent round to find bands 
 bands = DataSet(
     NonSelfConsistentCalc(),
     ToleranceOn.WavefunctionSquaredResidual(1e-12),
-    AbIn().ElectronDensity(sets[-1]),               # get the electron density from the last dataset
-    Occupation.EqualBandNumber(2.0, 8),             # same number of bands (max 8) for each k point
-    path(10, "GXWKGLUWLK", CriticalPointsOf.FCC)    # easily define a path in the k-space   
+    AbIn().ElectronDensity(sets[-1]),                   # get the electron density from the last dataset
+    OccupationPerBand(2.0, repeat=8),                   # same number of bands (max 8) for each k point
+    Path.auto(10, "GXWKGLUWLK", CriticalPointsOf.FCC)   # easily define a path in the k-space   
 )
 
 with open("./out.txt", 'w') as f:
@@ -59,20 +66,17 @@ ndtset 18
 
 # Atoms definition
 ntypat 2
-znucl 40 8
-pseudos "Zr.psp8, O.psp8"
+znucl 8 40
+pseudos "O.psp8, Zr.psp8"
 
 # Common DataSet
 natoms 3
-typeat 1 2 2
+typeat 2 1 1
 xred 0 0 0   0.3333333333333333 0.3333333333333333 0.3333333333333333   0.6666666666666666 0.6666666666666666 0.6666666666666666
 outdata_prefix "./scf/scf"
 pp_dirpath "./pseudos/PBE-SR"
-scalecart 5.14 5.14 5.14
+scalecart 0.5135 0.5135 0.5135 nm
 rprim 0.5 0.5 0.0   0.0 0.5 0.5   0.5 0.0 0.5
-kptopt 1
-nshiftk 4
-shiftk 0.5 0.5 0.5   0.5 0.0 0.0   0.0 0.5 0.0   0.0 0.0 0.5
 ngkpt 4 4 4
 iscf 17
 npulayit 10
@@ -135,10 +139,10 @@ iscf18 -2
 tolwfr18 1e-12
 getden18 17
 occopt18 0
-nbands18 8
 occ18 8*2.0
+bands18 8
 kptopt18 -9
-kptbounds18 0 0 0   0.0 0.5 0.5   0.25 0.75 0.5   0.375 0.75 0.375   0 0 0   0.5 0.5 0.5   0.25 0.625 0.625   0.25 0.75 0.5   0.5 0.5 0.5   0.375 0.75 0.375
+kptbounds18 0 0 0  0.0 0.5 0.5  0.25 0.75 0.5  0.375 0.75 0.375  0 0 0  0.5 0.5 0.5  0.25 0.625 0.625  0.25 0.75 0.5  0.5 0.5 0.5  0.375 0.75 0.375
 ndivsm18 10
 ```
 
