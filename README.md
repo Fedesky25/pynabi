@@ -3,7 +3,7 @@
 Python package to easily create [Abinit](https://www.abinit.org/) input files.
 
 ```cmd
-pip install pynabi==0.0.3
+pip install pynabi
 ```
 
 ## Example
