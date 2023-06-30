@@ -156,21 +156,25 @@ class SymmetricGrid(_CD):
         return self.type == i and super()._doesDelay(i)
     
     def ofMonkhorstPack(self, gridPointsNumber: int|tuple[int,int,int]|_L = _L()):
+        assert self.type == -1, "Symmetric grid type redefined"
         self.type = 0
         self._dv = (self._delayables[0].laterOrSanitized(gridPointsNumber), _L())
         return self
     
     def fromSuperLattice(self, a: _V, b: _V, c: _V):
+        assert self.type == -1, "Symmetric grid type redefined"
         self.type = 1
         self._dv = (_L(), self._delayables[1].laterOrSanitized((a,b,c)))
         return self
     
     @classmethod
     def setMPgridPointNumber(cls, num: int|tuple[int,int,int]):
+        """Sets the number of k points in the Monkhorst-Pack grid"""
         return _D(cls, 0, num)
     
     @classmethod
     def setSuperLatticeVectors(cls, a: _V, b: _V, c: _V):
+        """Sets the vectors of the super lattice"""
         return _D(cls, 1, (a,b,c))
 
 
