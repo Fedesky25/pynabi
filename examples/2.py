@@ -11,8 +11,6 @@ from pynabi.kspace import BZ, UsualKShifts, SymmetricGrid
 
 Si = Atom.of("Si")
 
-print(SymmetricGrid.__dict__)
-
 base = DataSet(
     AbOut("./scf/scf"),
     AbIn().PseudoPotentials("./pseudos/PBE-SR"),
