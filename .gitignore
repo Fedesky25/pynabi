@@ -3,3 +3,5 @@ __pycache__
 old/
 dist/
 *.egg-info
+.env
+.vscode
