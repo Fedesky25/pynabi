@@ -1,7 +1,5 @@
 from typing import TypeVar, Type, Tuple, Callable, Any, TypeGuard
 
-from pynabi._common import StampCollection
-
 
 __all__ = ["Vec3D"]
 
