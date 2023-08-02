@@ -1,4 +1,6 @@
 from typing import Literal as _L, Union as _U
+
+from pynabi._common import StampCollection
 from ._common import Stampable as _S, _pos_int, OneLineStamp as _OLS, IndexedWithDefault as _IWD
 from .units import Energy as _En
 from enum import Enum as _E
@@ -13,6 +15,10 @@ class SCFDirectMinimization(_S):
     
     def stamp(self, index: int):
         return f"iscf{index or ''} 0"
+    
+    def compatible(self, coll: StampCollection):
+        tol = coll.get(Tolerance)
+        assert tol is not None, "SCF direct minimization requires one tolerance to be spcified"
 
 
 class SCFMixing(_IWD, default="Pulay", prop="iscf"):
@@ -44,6 +50,10 @@ class SCFMixing(_IWD, default="Pulay", prop="iscf"):
         self._index = 7 + 10*int(self._den)
         self._extra = { "npulayit": iterations }
         return self
+    
+    def compatible(self, coll: StampCollection):
+        tol = coll.get(Tolerance)
+        assert tol is not None, "SCF mixing requires one tolerance to be specified"
 
 
 class NonSelfConsistentCalc(_S):
