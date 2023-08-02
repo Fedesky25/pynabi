@@ -120,8 +120,8 @@ class AbIn(Stampable):
         else:
             return f"get{m._prop}_filepath{i or ''} \"{v}\""
     
-    def PseudoPotentials(self, path: str):
-        self._ppd = path;
+    def PseudoPotentials(self, directory_path: str):
+        self._ppd = directory_path;
         return self
             
     FirstOrderDensity = _AbInMethod("1den")
@@ -221,21 +221,20 @@ class AbOut(Stampable):
 def createAbi(setup: Union[DataSet,None], *datasets: DataSet) -> str:
     """Given one optional base dataset and multiple subsequent datasets, it constructs the abinit input file and returns it as a string"""
     n = len(datasets)
-    if setup is None:
-        if n == 0:
-            return ''
-        elif n == 1:
-            return createAbi(datasets[0])
-        else:
-            setup = DataSet()
-    elif len(datasets) == 1:
+    if n == 1 and setup is None:
         raise ValueError("Cannot use a single dataset")
-    
-    res: list[str] = [f"ndtset {len(datasets)}\n"]
-
-    atomSet = set() if setup.atoms is None else set(setup.atoms.getAtoms())
-    initialAtomCount = len(atomSet)
+     
+    res: list[str] = [f"ndtset {n}\n"]
+    atomSet = set()
     base_coll = {} if setup is None else setup.map
+    if setup is not None:
+        coll = StampCollection(setup.map, {});
+        for s in setup.stamps:
+            s.compatible(coll)
+        if setup.atoms is not None:
+            atomSet = set(setup.atoms.getAtoms())
+    initialAtomCount = len(atomSet)
+
     for (i,d) in enumerate(datasets):
         d.index = i+1
         coll = StampCollection(d.map, base_coll)
@@ -248,8 +247,9 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet) -> str:
     
     atomPool = list(atomSet)
     res.append(Atom.poolstr(atomPool))
-    res.append("\n# Common DataSet")
-    res.append(setup.stamp(atomPool))
+    if setup is not None:
+        res.append("\n# Common DataSet")
+        res.append(setup.stamp(atomPool))
     for d in datasets:
         res.append(f"\n# DataSet {d.index}")
         res.append(d.stamp(atomPool))
