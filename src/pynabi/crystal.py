@@ -59,7 +59,7 @@ class AtomBasis(_S):
         indexes = [pool.index(a[0]) for a in self.atoms]
         suffix = str(index or '');
         x_type = "xcart" if self.cartesian else "xred";
-        return f"""natoms{suffix} {len(indexes)}
+        return f"""natom{suffix} {len(indexes)}
 typeat{suffix} {' '.join(str(i+1) for i in indexes)}
 {x_type}{suffix} {'   '.join(str(a[1]) for a in self.atoms)}"""
 
