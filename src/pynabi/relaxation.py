@@ -218,10 +218,20 @@ def _CO_method(n: int):
 
 
 class CellOptimization(_S):
-    def __init__(self, energyCutoffSmearing: _En|float) -> None:
+    def __init__(self, energyCutoffSmearing: _En|float|None = None) -> None:
+        """
+        `energyCutoffSmearing` regulates the smoothing the total energy curve (as a function of the energy cutoff), in order to keep consistency with the stress (and automatically including the Pulay stress).
+
+        If none is provided, 0.5 Hatree is used as default value (it is the recommended one). If you want to optimize cell shape and size without smoothing the total energy curve (a dangerous thing to do), use a very small value, on the order of one microHartree, but never zero.
+        """
         super().__init__()
-        self.s = _En.sanitize(energyCutoffSmearing)
+        if energyCutoffSmearing is None:
+            self.s = _En(0.5,0)
+        else:
+            self.s = _En.sanitize(energyCutoffSmearing)
+            assert self.s._v > 0, "Energy cutoff smearing must be positive"
         self.n = 0
+
     
     def stamp(self, index: int):
         s = index or ''
