@@ -64,7 +64,7 @@ class Smearing(Enum):
 
 
 _D_pos_int = DelayedInfo.basic(_pos_int, "must be a positive integer")
-_D_bands = _D_pos_int("nbands", "Number of bands")
+_D_bands = _D_pos_int("nband", "Number of bands")
 
 
 class _D_pos_energy(DelayedInfo):
@@ -225,7 +225,7 @@ class OccupationPerBand(Stampable):
             else:
                 o = f"{self._r}*{self._o[0]}"
         s = index or ''
-        return f"occopt{s} 0\nocc{s} {o}\nbands{s} {b}"
+        return f"occopt{s} 0\nocc{s} {o}\nband{s} {b}"
     
 
 _exclusives = set((Metal, Semiconductor, TwoQuasiFermilevels, OccupationPerBand))
