@@ -33,11 +33,34 @@ class SpinType:
 
 class Smearing(Enum):
     FermiDirac = 3
+    """
+    Fermi-Dirac smearing for a finite-temperature metal.
+    
+    Smeared delta function: 0.5*(cosh(x/2))^(-2)
+     
+    For usual calculations, at zero temperature, do not use this, but prefer Gaussian smearing instead. If you want to do a calculation at finite temperature, please refer to the electron physical temperature.
+    """
+
     Marzari5634 = 4
+    """“Cold smearing” of N. Marzari (see his thesis work), with a=-0.5634 -> minimization of the bump"""
+
     Marzari8165 = 5
+    """“Cold smearing” of N. Marzari (see his thesis work), with a=-0.8165 -> monotonic function in the tail """
+
     MethfesselPaxton = 6
+    """Smearing of Methfessel and Paxton [Methfessel1989](https://docs.abinit.org/theory/bibliography#methfessel1989) with Hermite polynomial of degree 2, corresponding to “Cold smearing” of N. Marzari with a=0"""
+
     Gaussian = 7
+    """
+    Gaussian smearing, corresponding to the 0-order Hermite polynomial of Methfessel and Paxton. 
+    
+    Smeared delta function: exp(-x^2)/sqrt(π)
+    
+    Robust and quite efficient.
+    """
+    
     Uniform = 8
+    """Uniform smearing: the delta function is replaced by a constant function of value one over ]-0.5,+0.5[ (with one-half value at the boundaries). Used for testing purposes only."""
 
 
 _D_pos_int = DelayedInfo.basic(_pos_int, "must be a positive integer")
@@ -62,6 +85,14 @@ class Metal(CanDelay):
                  broadening: Union[float,Energy,Later] = Later(), 
                  ePhysicalTemp: float|Energy|Later = Later()
                  ) -> None:
+        """
+         * `smearing`: the smerign function to use.
+         * `bands`: number of bands, occupied plus possibly unoccupied, for which wavefunctions are being computed along with eigenvalues.
+         * `broadening`: temperature of smearing which gives the broadening of occupation numbers. Abinit default value is 0.01 Hartree, which should be OK using gaussian like smearings (Marzari, Methfessel-Paxton, Gaussian) for a free-electron metal, like Al. For d-band metals, you may need to use less.
+            * For the Fermi-Dirac smearing, it is the physical temperature, as the broadening is based on Fermi-Dirac statistics
+            * For Gaussian-like smearing (Marzari, Methfessel-Paxton, Gaussian), it is only a convergence parameter, while the pysical temperature can be set using `ePhysicalTemp`.
+         * `ePhysicalTemp`: the physical temperature of the system; note that the signification of the entropy is modified with respect to the usual entropy: the choice has been made to use `broadening` as a prefactor of the entropy, to define the entropy contribution to the free energy.
+        """
         super().__init__(bands, broadening, ePhysicalTemp)
         self._opt = smearing.value
 
