@@ -66,17 +66,20 @@ ndtset 18
 
 # Atoms definition
 ntypat 2
-znucl 8 40
-pseudos "O.psp8, Zr.psp8"
+znucl 40 8
+pseudos "Zr.psp8, O.psp8"
 
 # Common DataSet
-natoms 3
-typeat 2 1 1
+natom 3
+typat 1 2 2
 xred 0 0 0   0.3333333333333333 0.3333333333333333 0.3333333333333333   0.6666666666666666 0.6666666666666666 0.6666666666666666
 outdata_prefix "./scf/scf"
 pp_dirpath "./pseudos/PBE-SR"
 scalecart 0.5135 0.5135 0.5135 nm
 rprim 0.5 0.5 0.0   0.0 0.5 0.5   0.5 0.0 0.5
+kptopt 1
+nshiftk 4
+shiftk 0.5 0.5 0.5 0.5 0.0 0.0 0.0 0.5 0.0 0.0 0.0 0.5
 ngkpt 4 4 4
 iscf 17
 npulayit 10
@@ -140,7 +143,7 @@ tolwfr18 1e-12
 getden18 17
 occopt18 0
 occ18 8*2.0
-bands18 8
+band18 8
 kptopt18 -9
 kptbounds18 0 0 0  0.0 0.5 0.5  0.25 0.75 0.5  0.375 0.75 0.375  0 0 0  0.5 0.5 0.5  0.25 0.625 0.625  0.25 0.75 0.5  0.5 0.5 0.5  0.375 0.75 0.375
 ndivsm18 10
