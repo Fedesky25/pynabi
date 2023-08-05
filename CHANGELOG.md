@@ -1,5 +1,14 @@
 # PynAbi Changelog
 
+## 0.1.2
+
+ * Feature: `SCFMixing` and `SCFDirectMinimization` require `Tolerance` to be specified
+ * Feature: when `NonSelfConsistentCal` is not explicitly set, PynAbi will check the existence of `Tolerance` (Abinit implicitly assumes a SCF calculation)
+ * Documentation: for `Smearing` and `Metal`
+ * Fix: `typat`, `natom`, `nband` spelled correctly
+ * Fix: compatibility check also on base dataset
+ * Fix: `SymmetricGrid` now correctly writes `kptopt` and `shiftk` 
+
 ## 0.1.1
 
  * Fix: `CanDelay` in same dataset of one of its `Delayed` properties must delay that property
