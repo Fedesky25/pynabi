@@ -1,6 +1,7 @@
 from typing import Union, List, Iterable, Literal, Callable, Optional, Type, TypeVar
 from ._common import Stampable, Singleton, Delayed, StampCollection
 from .crystal import AtomBasis, Atom
+from .calculation import NonSelfConsistentCalc, Tolerance
 from inspect import stack
 
 from .occupation import _exclusives as _ex1
@@ -191,7 +192,7 @@ class AbOut(Stampable):
     MResolvedPartialDOS = _os("dosm")
     EigenEnergies = _os("eig")
     ElectronLocalizedFunction = _os("elf")
-    FermiSurface = _os("surf")
+    FermiSurface = _os("fsurf")
     ElectronDensityGradient = _os("gden")
     GeometryAnalysis = _os("geo")
     MatrixGKK = _os("gkk")
@@ -227,14 +228,20 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet) -> str:
     res: list[str] = [f"ndtset {n}\n"]
     atomSet = set()
     base_coll = {} if setup is None else setup.map
+
+    # check base dataset
+    no_base_tol = True
     if setup is not None:
         coll = StampCollection(setup.map, {});
         for s in setup.stamps:
             s.compatible(coll)
         if setup.atoms is not None:
             atomSet = set(setup.atoms.getAtoms())
-    initialAtomCount = len(atomSet)
+        # check that user sets tolerance when no SCF is specified
+        no_base_tol = setup.map.get(Tolerance) is None and setup.map.get(NonSelfConsistentCalc) is None
 
+    # check compatibility
+    initialAtomCount = len(atomSet)
     for (i,d) in enumerate(datasets):
         d.index = i+1
         coll = StampCollection(d.map, base_coll)
@@ -245,6 +252,12 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet) -> str:
         elif initialAtomCount == 0:
             raise ValueError(f"All datasets (in particular the {i+1}-th one) must define the atom basis since no common one was defined")
     
+    # if no tolerance on base set
+    if no_base_tol:
+        for ds in datasets:
+            if ds.map.get(Tolerance) is None and ds.map.get(NonSelfConsistentCalc) is None:
+                raise ValueError(f"All numbered datasets without explicit Non SCF calculation must specify a Tolerance, since Abinit will implicitly assume a SFC calculation")
+
     atomPool = list(atomSet)
     res.append(Atom.poolstr(atomPool))
     if setup is not None:
