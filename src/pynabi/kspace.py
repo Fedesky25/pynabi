@@ -167,6 +167,11 @@ class SymmetricGrid(_CD):
         self._dv = (_L(), self._delayables[1].laterOrSanitized((a,b,c)))
         return self
     
+    def stamp(self, index: int):
+        s = index or ''
+        shift = " ".join(str(t) for t in self.shi)
+        return f"kptopt{s} {self.sym.value}\nnshiftk{s} {len(self.shi)}\nshiftk{s} {shift}\n{super().stamp(index)}"
+    
     @classmethod
     def setMPgridPointNumber(cls, num: int|tuple[int,int,int]):
         """Sets the number of k points in the Monkhorst-Pack grid"""
