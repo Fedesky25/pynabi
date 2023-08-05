@@ -87,7 +87,7 @@ class Metal(CanDelay):
                  ) -> None:
         """
          * `smearing`: the smerign function to use.
-         * `bands`: number of bands, occupied plus possibly unoccupied, for which wavefunctions are being computed along with eigenvalues.
+         * `bands`: number of bands, occupied plus possibly unoccupied, for which wavefunctions are being computed along with eigenvalues; must be doubled in case of 2 wavefunction spinorial component (`SpinType.SpinOrbitCoupling` and `Spintype.NonCollinearMagnetism`)
          * `broadening`: temperature of smearing which gives the broadening of occupation numbers. Abinit default value is 0.01 Hartree, which should be OK using gaussian like smearings (Marzari, Methfessel-Paxton, Gaussian) for a free-electron metal, like Al. For d-band metals, you may need to use less.
             * For the Fermi-Dirac smearing, it is the physical temperature, as the broadening is based on Fermi-Dirac statistics
             * For Gaussian-like smearing (Marzari, Methfessel-Paxton, Gaussian), it is only a convergence parameter, while the pysical temperature can be set using `ePhysicalTemp`.
