@@ -239,6 +239,8 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet) -> str:
             atomSet = set(setup.atoms.getAtoms())
         # check that user sets tolerance when no SCF is specified
         no_base_tol = setup.map.get(Tolerance) is None and setup.map.get(NonSelfConsistentCalc) is None
+        if n == 0 and no_base_tol:
+            raise ValueError("The dataset must specify a Tolerance, since Abinit will implictly assume a SCF calculation")
 
     # check compatibility
     initialAtomCount = len(atomSet)
@@ -256,7 +258,7 @@ def createAbi(setup: Union[DataSet,None], *datasets: DataSet) -> str:
     if no_base_tol:
         for ds in datasets:
             if ds.map.get(Tolerance) is None and ds.map.get(NonSelfConsistentCalc) is None:
-                raise ValueError(f"All numbered datasets without explicit Non SCF calculation must specify a Tolerance, since Abinit will implicitly assume a SFC calculation")
+                raise ValueError("All numbered datasets without explicit Non SCF calculation must specify a Tolerance, since Abinit will implicitly assume a SFC calculation")
 
     atomPool = list(atomSet)
     res.append(Atom.poolstr(atomPool))
