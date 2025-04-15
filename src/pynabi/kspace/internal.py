@@ -1,12 +1,13 @@
-from ._common import Vec3D as _V, Stampable as _Stmp, _pos_int, _pos_num, CanDelay as _CD, Delayed as _D, Later as _L
-from enum import Enum as _E
-from typing import Dict as _dict, Any as _any, Union as _union, Tuple as _tuple, Iterable as _iter
+"""
+WARNING: do not import this file directly!
+"""
+
+from pynabi._common import Vec3D as Vec3D, Stampable as Stampable, _pos_int, CanDelay as CanDelay, Delayed as Delayed, Later as Later
+from typing import Dict as Dict, Union as Union, Tuple as Tuple, Iterable as Iterable
+from enum import Enum as Enum
 
 
-__all__ = ["BZ", "CriticalPointsOf", "ManualGrid", "SymmetricGrid", "UsualKShifts", "Path"]
-
-
-class BZ(_E):
+class BrillouinZone(Enum):
     """Brillouin Zone symmetries required to setup a symmetric grid"""
     Irreducible = 1
     Half = 2
@@ -14,79 +15,79 @@ class BZ(_E):
     NoTimeReversal = 4
 
 
-class CriticalPointsOf(_E):
+class CriticalPointsOf(Enum):
     """
     Critical points of (some) Brillouin zones\n
     Taken from http://lampx.tugraz.at/~hadley/ss1/bzones/
     """
     CUB = {
-        'R': _V(0.5, 0.5, 0.5),
-        'X': _V(0.0, 0.5, 0.0),
-        'M': _V(0.5, 0.5, 0.0)
+        'R': Vec3D(0.5, 0.5, 0.5),
+        'X': Vec3D(0.0, 0.5, 0.0),
+        'M': Vec3D(0.5, 0.5, 0.0)
     }
     BCC = {
-        'H': _V(-0.5, 0.5, 0.5),
-        'P': _V.uniform(0.25),
-        'N': _V(0.0, 0.5, 0.0)
+        'H': Vec3D(-0.5, 0.5, 0.5),
+        'P': Vec3D.uniform(0.25),
+        'N': Vec3D(0.0, 0.5, 0.0)
     }
     FCC = {
-        'X': _V(0.0, 0.5, 0.5),
-        'L': _V.uniform(0.5),
-        'W': _V(0.25, 0.75, 0.5),
-        'U': _V(0.25, 0.625, 0.625),
-        'K': _V(0.375, 0.75, 0.375)
+        'X': Vec3D(0.0, 0.5, 0.5),
+        'L': Vec3D.uniform(0.5),
+        'W': Vec3D(0.25, 0.75, 0.5),
+        'U': Vec3D(0.25, 0.625, 0.625),
+        'K': Vec3D(0.375, 0.75, 0.375)
     }
     HEX = {
-        'A': _V(0,0,1/2),
-        'K': _V(2/3,1/3,0),
-        'H': _V(2/3,1/3,1/2),
-        'M': _V(1/2,0,0),
-        'L': _V(1/2,0,1/2)
+        'A': Vec3D(0,0,1/2),
+        'K': Vec3D(2/3,1/3,0),
+        'H': Vec3D(2/3,1/3,1/2),
+        'M': Vec3D(1/2,0,0),
+        'L': Vec3D(1/2,0,1/2)
     }
     TET = {
-        'X': _V(0.5,0.0,0.0),
-        'M': _V(0.5,0.5,0.0),
-        'Z': _V(0.0,0.0,0.5),
-        'R': _V(0.5,0.0,0.5),
-        'A': _V.uniform(0.5)
+        'X': Vec3D(0.5,0.0,0.0),
+        'M': Vec3D(0.5,0.5,0.0),
+        'Z': Vec3D(0.0,0.0,0.5),
+        'R': Vec3D(0.5,0.0,0.5),
+        'A': Vec3D.uniform(0.5)
     }
     BCT = {
-        'X': _V(0.5,0.0,0.0),
-        'Z': _V(0.5,0.5,-0.5),
-        'N': _V(0.0,0.5,0.0),
-        'P': _V.uniform(0.25)
+        'X': Vec3D(0.5,0.0,0.0),
+        'Z': Vec3D(0.5,0.5,-0.5),
+        'N': Vec3D(0.0,0.5,0.0),
+        'P': Vec3D.uniform(0.25)
     }
     ORC = {
-        'X': _V(0.5,0.0,0.0),
-        'Y': _V(0.0,0.5,0.0),
-        'Z': _V(0.0,0.0,0.5),
-        'T': _V(0.0,0.5,0.5),
-        'U': _V(0.5,0.0,0.5),
-        'S': _V(0.5,0.5,0.5),
-        'R': _V.uniform(0.5)
+        'X': Vec3D(0.5,0.0,0.0),
+        'Y': Vec3D(0.0,0.5,0.0),
+        'Z': Vec3D(0.0,0.0,0.5),
+        'T': Vec3D(0.0,0.5,0.5),
+        'U': Vec3D(0.5,0.0,0.5),
+        'S': Vec3D(0.5,0.5,0.5),
+        'R': Vec3D.uniform(0.5)
     }
     ORCC = {
-        'Y': _V(0.5,0.5,0.0),
-        'Y': _V(-0.5,0.5,0.0),
-        'Z': _V(0.0,0.0,0.5),
-        'T': _V.uniform(0.5),
-        'T': _V(-0.5,0.5,0.5),
-        'S': _V(0.0,0.5,0.0),
-        'R': _V(0.0,0.5,0.5),
+        'Y': Vec3D(0.5,0.5,0.0),
+        'Y': Vec3D(-0.5,0.5,0.0),
+        'Z': Vec3D(0.0,0.0,0.5),
+        'T': Vec3D.uniform(0.5),
+        'T': Vec3D(-0.5,0.5,0.5),
+        'S': Vec3D(0.0,0.5,0.0),
+        'R': Vec3D(0.0,0.5,0.5),
     }
 
 
-class UsualKShifts(_E):
-    Unshifted = (_V.zero(),)
-    Default = (_V.uniform(0.5),)
-    BCC = (_V.uniform(0.25), _V.uniform(-0.25))
-    FCC = (_V.uniform(0.5), _V(0.5,0.0,0.0), _V(0.0,0.5,0.0), _V(0.0,0.0,0.5))
-    HEX = (_V(1.0,0.0,0.0), _V(-0.5,0.8660254037844386,0.0), _V(0.0,0.0,1.0))
+class UsualKShifts(Enum):
+    Unshifted = (Vec3D.zero(),)
+    Default = (Vec3D.uniform(0.5),)
+    BCC = (Vec3D.uniform(0.25), Vec3D.uniform(-0.25))
+    FCC = (Vec3D.uniform(0.5), Vec3D(0.5,0.0,0.0), Vec3D(0.0,0.5,0.0), Vec3D(0.0,0.0,0.5))
+    HEX = (Vec3D(1.0,0.0,0.0), Vec3D(-0.5,0.8660254037844386,0.0), Vec3D(0.0,0.0,1.0))
 
 
-class ManualGrid(_Stmp):
-    def __init__(self, *points: _V, normalize: float = 1.0) -> None:
-        assert all(type(v) is _V for v in points), "Points of the manual grid must be Vec3D"
+class ManualGrid(Stampable):
+    def __init__(self, *points: Vec3D, normalize: float = 1.0) -> None:
+        assert all(type(v) is Vec3D for v in points), "Points of the manual grid must be Vec3D"
         assert normalize >= 1, "k-points normalization faction cannot be lower than 1"
         self.p = points
         self.n = normalize
@@ -97,17 +98,17 @@ class ManualGrid(_Stmp):
         return f"kptopt{s} 0\nnkpt{s} {len(self.p)}\nkpt{s} {kpt}\nkptnrm{s} {self.n}"
 
 
-def _parse_shifts(value: _tuple[_V,...]|UsualKShifts) -> _tuple[_V,...]:
+def _parse_shifts(value: Tuple[Vec3D,...]|UsualKShifts) -> Tuple[Vec3D,...]:
     if type(value) is UsualKShifts:
         return value.value
     elif type(value) is tuple:
-        assert all(type(v) is _V for v in value), "K Shifts must be vectors"
+        assert all(type(v) is Vec3D for v in value), "K Shifts must be vectors"
         return value
     else:
         raise TypeError("Invalid type of k shifts")
 
 
-class _D_grid_points(_CD.info):
+class _D_grid_points(CanDelay.info):
     def sanitize(self, value):
         t = type(value)
         if t is int:
@@ -123,11 +124,11 @@ class _D_grid_points(_CD.info):
         return f"{self.prop}{suffix} {value[0]} {value[1]} {value[2]}"
 
 
-class _D_super_lattice(_CD.info):
+class _D_super_lattice(CanDelay.info):
     def sanitize(self, value):
         try:
             assert type(value) is tuple and len(value) == 3
-            assert all(type(v) is _V for v in value) 
+            assert all(type(v) is Vec3D for v in value) 
             return value
         except:
             raise TypeError(f"{self.name} must be three Vec3D")
@@ -137,7 +138,7 @@ class _D_super_lattice(_CD.info):
         return f"{self.prop}{suffix} {s}"
 
 
-class SymmetricGrid(_CD):
+class SymmetricGrid(CanDelay):
     """Constructs a grid of k-points in the reciprocal space leveraging a symmetry of the Brillouin Zone"""
 
     _delayables = (
@@ -145,9 +146,9 @@ class SymmetricGrid(_CD):
         _D_super_lattice("kptrlatt", "Super lattice vectors")
     )
 
-    def __init__(self, symmetry: BZ, shifts: _union[_tuple[_V,...], UsualKShifts] = ()):
-        super().__init__(_L(),_L())
-        assert type(symmetry) is BZ, "Symmetry must one of the entries of BZ"
+    def __init__(self, symmetry: BrillouinZone, shifts: Union[Tuple[Vec3D,...], UsualKShifts] = ()):
+        super().__init__(Later(),Later())
+        assert type(symmetry) is BrillouinZone, "Symmetry must one of the entries of BZ"
         self.sym = symmetry
         self.shi = _parse_shifts(shifts)
         self.type = -1
@@ -155,16 +156,16 @@ class SymmetricGrid(_CD):
     def _doesDelay(self, i: int):
         return self.type == i and super()._doesDelay(i)
     
-    def ofMonkhorstPack(self, gridPointsNumber: int|tuple[int,int,int]|_L = _L()):
+    def ofMonkhorstPack(self, gridPointsNumber: int|tuple[int,int,int]|Later = Later()):
         assert self.type == -1, "Symmetric grid type redefined"
         self.type = 0
-        self._dv = (self._delayables[0].laterOrSanitized(gridPointsNumber), _L())
+        self._dv = (self._delayables[0].laterOrSanitized(gridPointsNumber), Later())
         return self
     
-    def fromSuperLattice(self, a: _V, b: _V, c: _V):
+    def fromSuperLattice(self, a: Vec3D, b: Vec3D, c: Vec3D):
         assert self.type == -1, "Symmetric grid type redefined"
         self.type = 1
-        self._dv = (_L(), self._delayables[1].laterOrSanitized((a,b,c)))
+        self._dv = (Later(), self._delayables[1].laterOrSanitized((a,b,c)))
         return self
     
     def stamp(self, index: int):
@@ -175,20 +176,20 @@ class SymmetricGrid(_CD):
     @classmethod
     def setMPgridPointNumber(cls, num: int|tuple[int,int,int]):
         """Sets the number of k points in the Monkhorst-Pack grid"""
-        return _D(cls, 0, num)
+        return Delayed(cls, 0, num)
     
     @classmethod
-    def setSuperLatticeVectors(cls, a: _V, b: _V, c: _V):
+    def setSuperLatticeVectors(cls, a: Vec3D, b: Vec3D, c: Vec3D):
         """Sets the vectors of the super lattice"""
-        return _D(cls, 1, (a,b,c))
+        return Delayed(cls, 1, (a,b,c))
 
 
-class AutomaticGrid(_Stmp):
+class AutomaticGrid(Stampable):
     """ABINIT will automatically generate a large set of possible k point grids, and select among this set, the grids that give a length of smallest vector larger than the provided lenght.
     
     Note that this procedure can be time-consuming. It is worth doing it once for a given unit cell and set of symmetries, but not use this procedure by default. The best is then to use `AbOut().KPointsSets()`, in order to get a detailed analysis of the set of grids."""
 
-    def __init__(self, symmetry: BZ, length: float = 30.0):
+    def __init__(self, symmetry: BrillouinZone, length: float = 30.0):
         self.sym = symmetry
         self.len = length
     
@@ -197,19 +198,19 @@ class AutomaticGrid(_Stmp):
         return f"kptopt{s} {self.sym.value}\nkptrlen{s} {self.len}"
 
 
-def _parse_crit_point(c: str, s: dict[str,_V]):
+def _parse_crit_point(c: str, s: dict[str,Vec3D]):
     if c == 'G':
-        return _V.zero()
+        return Vec3D.zero()
     else:
         assert c in s, f"(critical) point '{c}' is not defined"
-        assert type(s[c]) is _V, f"type of critial point '{c}' is not Vec3D"
+        assert type(s[c]) is Vec3D, f"type of critial point '{c}' is not Vec3D"
         return s[c]
 
 
-class Path(_Stmp):
+class Path(Stampable):
     """A path though points in the reciprocal space"""
 
-    def __init__(self, points: list[_V]|tuple[_V], prop: str, val: str) -> None:
+    def __init__(self, points: list[Vec3D]|tuple[Vec3D], prop: str, val: str) -> None:
         """DO NOT USE this constructor"""
         super().__init__()
         self.points = points
@@ -222,7 +223,7 @@ class Path(_Stmp):
         return f"kptopt{s} {1-len(self.points)}\nkptbounds{s} {bounds}\n{self.prop}{s} {self.val}"
 
     @staticmethod
-    def auto(minDivisions: int, points: str|_iter[_union[str,_V]], pointSet: CriticalPointsOf|_dict[str,_V] = {}):
+    def auto(minDivisions: int, points: str|Iterable[Union[str,Vec3D]], pointSet: CriticalPointsOf|Dict[str,Vec3D] = {}):
         """Path through k points. The number of division for each segment is scaled based on the length and `minDivisions`, the number of division of the smallest segment.
         
         ## Example
@@ -251,13 +252,13 @@ class Path(_Stmp):
         p4 = Path.auto(10, "GABGC", ccp) # note that 'G' is always (0,0,0)
         ```"""
         assert _pos_int(minDivisions), "Smallest division must be a positive integer"
-        s: dict[str,_V] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
-        b: list[_V] = []
+        s: dict[str,Vec3D] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
+        b: list[Vec3D] = []
         for p in points:
             if type(p) is str:
                 for c in p:
                     b.append(_parse_crit_point(c,s))
-            elif type(p) is _V:
+            elif type(p) is Vec3D:
                 b.append(p)
             else:
                 raise TypeError(f"Invalid type of k-path point (got {type(p)})")
@@ -265,8 +266,8 @@ class Path(_Stmp):
         return Path(b, "ndivsm", str(minDivisions))
     
     @staticmethod
-    def manual(*args: int|_V|str, pointSet: CriticalPointsOf|_dict[str,_V] = {}):
-        """Path though k points where each segment has its own number of divisions. To specify points and divisions, the arguments must be a sequence of alternating positive integers and k points, starting and eending in a k point.
+    def manual(*args: int|Vec3D|str, pointSet: CriticalPointsOf|Dict[str,Vec3D] = {}):
+        """Path though k points where each segment has its own number of divisions. To specify points and divisions, the arguments must be a sequence of alternating positive integers and k points, starting and ending in a k point.
 
         ## Example
         ```python
@@ -286,17 +287,17 @@ class Path(_Stmp):
             'B': V(0.75,0.5,0.25),
             'C': V(-0.5,0.25,0.4)
         }
-        p4 = Path.auto('G',7,'A',8,'B',16'G',10,'C', pointSet=ccp) # note that 'G' is always (0,0,0)
+        p4 = Path.auto('G',7,'A',8,'B',16,'G',10,'C', pointSet=ccp) # note that 'G' is always (0,0,0)
         ```"""
-        s: dict[str,_V] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
-        p: list[_V] = []
+        s: dict[str,Vec3D] = pointSet.value if type(pointSet) is CriticalPointsOf else pointSet  # type: ignore
+        p: list[Vec3D] = []
         d: list[int] = []
         assert len(args) & 1, "Invalid path sequence"
         for i in range(0, len(args)-1, 2):
             t = type(args[i])
             if t is str:
                 p.append(_parse_crit_point(args[i],s)) # type: ignore
-            elif t is _V:
+            elif t is Vec3D:
                 p.append(args[i]) # type: ignore
             else:
                 raise TypeError(f"Element number {i+1} must be a vector or a critical point name")
@@ -306,7 +307,7 @@ class Path(_Stmp):
         t = type(last)
         if t is str:
             p.append(_parse_crit_point(last,s)) # type: ignore
-        elif t is _V:
+        elif t is Vec3D:
             p.append(last) # type: ignore
         else:
             raise TypeError(f"Last element must be a vector or a critical point name")

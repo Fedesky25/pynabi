@@ -1,12 +1,12 @@
 from typing import Union, List, Iterable, Literal, Callable, Optional, Type, TypeVar
 from ._common import Stampable, Singleton, Delayed, StampCollection
 from .crystal import AtomBasis, Atom
-from .calculation import NonSelfConsistentCalc, Tolerance
+from .calculation.internal import NonSelfConsistentCalc, Tolerance
 from inspect import stack
 
-from .occupation import _exclusives as _ex1
-from .calculation import _exclusives as _ex2
-from .kspace import _exclusives as _ex3
+from .occupation.internal import _exclusives as _ex1
+from .calculation.internal import _exclusives as _ex2
+from .kspace.internal import _exclusives as _ex3
 
 _excl = [_ex1, _ex2, _ex3]
 

@@ -1,15 +1,14 @@
-from typing import Literal as _L, Union as _U
+"""
+WARNING: do not import this file directly!
+"""
 
-from pynabi._common import StampCollection
-from ._common import Stampable as _S, _pos_int, OneLineStamp as _OLS, IndexedWithDefault as _IWD
-from .units import Energy as _En
-from enum import Enum as _E
+from pynabi._common import Stampable, StampCollection, _pos_int, OneLineStamp, IndexedWithDefault 
+from pynabi.units.internal import Energy
+from typing import Literal, Union as Union
+from enum import Enum
 
 
-__all__ = ["SCFDirectMinimization", "SCFMixing", "NonSelfConsistentCalc", "ToleranceOn", "EnergyCutoff", "MaxSteps"]
-
-
-class SCFDirectMinimization(_S):
+class SCFDirectMinimization(Stampable):
     def __init__(self) -> None:
         super().__init__()
     
@@ -21,7 +20,7 @@ class SCFDirectMinimization(_S):
         assert tol is not None, "SCF direct minimization requires one tolerance to be spcified"
 
 
-class SCFMixing(_IWD, default="Pulay", prop="iscf"):
+class SCFMixing(IndexedWithDefault, default="Pulay", prop="iscf"):
     """Usual ground state (GS) calculations or for structural relaxations, where the potential has to be determined self-consistently"""
 
     def __init__(self, density: bool = False) -> None:
@@ -56,8 +55,8 @@ class SCFMixing(_IWD, default="Pulay", prop="iscf"):
         assert tol is not None, "SCF mixing requires one tolerance to be specified"
 
 
-class NonSelfConsistentCalc(_S):
-    def __init__(self, i: _L[-1,-2,-3] = -2) -> None:
+class NonSelfConsistentCalc(Stampable):
+    def __init__(self, i: Literal[-1,-2,-3] = -2) -> None:
         assert type(i) is int and -3 <= i <= -1, "Non self consistend calculation index must be -1, -2, or -3"
         self._i = i
     
@@ -65,7 +64,7 @@ class NonSelfConsistentCalc(_S):
         return f"iscf{index or ''} {self._i}"
     
 
-class ToleranceOn(_E):
+class ToleranceOn(Enum):
     EnergyDifference = "dfe"
     ForceDifference = "dff"
     ForceRelativeDifference = "drff"
@@ -76,21 +75,21 @@ class ToleranceOn(_E):
         return Tolerance(value, self.value)
 
 
-class Tolerance(_OLS):
+class Tolerance(OneLineStamp):
     """Do not use this class directly: prefer ToleranceOn"""
     name = "tol"
 
 
-class EnergyCutoff(_OLS):
+class EnergyCutoff(OneLineStamp):
     """Used to define the kinetic energy cutoff which controls the number of planewaves at given k point. The allowed plane waves are those with kinetic energy lower than ecut, which translates to the following constraint on the planewave vector G in reciprocal space"""
     name = "ecut"
-    def __init__(self, value: _U[float,_En]) -> None:
-        e = _En.sanitize(value);
+    def __init__(self, value: Union[float,Energy]) -> None:
+        e = Energy.sanitize(value);
         assert e._v > 0, "cutoff energy must be positive"
         super().__init__(str(e))
 
 
-class MaxSteps(_OLS):
+class MaxSteps(OneLineStamp):
     """The maximum number of cycles (or “iterations”) in a SCF or non-SCF run. 
     
     Full convergence from random numbers is usually achieved in 12-20 SCF iterations. Each can take from minutes to hours. In certain difficult cases, usually related to a small or zero band gap or magnetism, convergence performance may be much worse

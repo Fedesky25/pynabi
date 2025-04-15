@@ -1,8 +1,13 @@
-from typing import Union as _Un, Optional as _Op, Tuple as _Tu, Self as  _Self, Any as _Any
-from ._common import Vec3D as _V
+"""
+WARNING: do not import this file directly!
+"""
 
-class _AbMeasure:
-    _U: _Tu[_Tu[float, str],...] = ()
+from pynabi._common import Vec3D
+from typing import Self, Union, Tuple, Optional, Any
+
+
+class AbMeasure:
+    _U: Tuple[Tuple[float, str],...] = ()
     _R = (1.0, 0)
 
     def __init__(self, value: float, unit: int) -> None:
@@ -10,25 +15,25 @@ class _AbMeasure:
         self._v = value
         self._u = unit
 
-    def __mul__(self, other: _Un[int,float]) -> _Self:
+    def __mul__(self, other: Union[int,float]) -> Self:
         if type(other) is int or type(other) is float:
             return type(self)(self._v*other, self._u) # type: ignore
         else:
-            return NotImplemented
+            raise NotImplementedError(f"Quantity of type {type(self).__name__} can only be multiplied by a scalar number")
 
-    def __rmul__(self, other: _Un[int,float]) -> _Self:
+    def __rmul__(self, other: Union[int,float]) -> Self:
         return type(self).__mul__(self, other)
 
-    def __add__(self, other: _Self):
-        if type(other) is not Length:
-            return NotImplemented
+    def __add__(self, other: Self):
+        if type(other) is not type(self):
+            raise NotImplementedError(f"Cannot add quantities of different type ({type(self).__name__} and {type(other).__name__})")
         U = type(self)._U
         delta = other._v * U[other._u][0] / U[self._u][0]
         return type(self)(self._v + delta, self._u);
 
-    def __sub__(self, other: _Self) -> '_Self':
-        if type(other) is not Length:
-            return NotImplemented # type: ignore
+    def __sub__(self, other: Self) -> Self:
+        if type(other) is not type(self):
+            raise NotImplementedError(f"Cannot subtract quantities of different type ({type(self).__name__} and {type(other).__name__})")
         U = type(self)._U
         delta = other._v * U[other._u][0] / U[self._u][0]
         return type(self)(self._v - delta, self._u);
@@ -43,7 +48,7 @@ class _AbMeasure:
         type(self)._R = (self._v, self._u)
     
     @classmethod
-    def fromReference(cls, value: float, ref: _Op[_Self]) -> _Self:
+    def fromReference(cls, value: float, ref: Optional[Self]) -> Self:
         assert type(value) is float or type(value) is int, f"Value of {cls.__name__} must be a number"
         if ref is None:
             return cls(value*cls._R[0], cls._R[1])
@@ -52,7 +57,7 @@ class _AbMeasure:
             return value*ref
 
     @classmethod
-    def sanitize(cls, value: _Any) -> _Self:
+    def sanitize(cls, value: Any) -> Self:
         t = type(value)
         if t is float or t is int:
             return cls(value*cls._R[0], cls._R[1])
@@ -66,8 +71,12 @@ class _AbMeasure:
         return cls(cls._R[0], cls._R[1])
 
 
-class Length(_AbMeasure):
-    _U = ((0.529177249, "Bohr"), (1.0, "Angstrom"), (10.0, "nm"))
+class Length(AbMeasure):
+    _U = (
+        (0.529177249, "Bohr"), 
+        (1.0, "Angstrom"), 
+        (10.0, "nm")
+    )
 
 
 Bohr = Length(1.0, 0)
@@ -75,7 +84,7 @@ Ang = Length(1.0, 1)
 nm = Length(1.0, 2)
 
 
-class Energy(_AbMeasure):
+class Energy(AbMeasure):
     _U = (
         (27.2114, "Ha"),
         (1.0, "eV"),
@@ -91,7 +100,7 @@ Kelvin = Energy(1.0, 3)
 
 
 class Pos3D:
-    def __init__(self, x: float, y: float, z: float, unit: _Op[Length] = None) -> None:
+    def __init__(self, x: float, y: float, z: float, unit: Optional[Length] = None) -> None:
         m = 1.0
         if unit is None:
             m = Length._R[0]
@@ -109,15 +118,15 @@ class Pos3D:
         return f"{self.x} {self.y} {self.z} {Length._U[self.u][1]}"
     
     @staticmethod
-    def uniform(l: _Un[float,'Length']):
+    def uniform(l: Union[float,'Length']):
         return Pos3D(1,1,1,Length.sanitize(l))
     
     @staticmethod
-    def sanitize(v: _Any) -> 'Pos3D':
+    def sanitize(v: Any) -> 'Pos3D':
         t = type(v)
         if t is Pos3D:
             return v
-        elif t is _V:
+        elif t is Vec3D:
             return Pos3D(v.x,v.y,v.z)
         else:
             raise TypeError(f"Cannot construct Pos3D from {v} (of type {t})")

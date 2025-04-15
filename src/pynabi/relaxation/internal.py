@@ -1,16 +1,20 @@
-from ._common import Stampable as _S, StampCollection as _SC, _pos_num, _pos0_num, IndexedWithDefault as _IWD
-from .units import Energy as _En
-from typing import Literal as _L, Tuple as _T
+"""
+WARNING: do not import this file directly!
+"""
+
+from pynabi._common import Stampable, StampCollection, _pos_num, _pos0_num, IndexedWithDefault
+from pynabi.units.internal import Energy, Ha
+from typing import Literal, Tuple
 
 
 # TODO: missing ionmov 20, 28
 
 
-# class FixedAtoms(_S):
+# class FixedAtoms(Stampable):
 #     pass
 
 
-def _check_co(coll: _SC, name: str):
+def _check_co(coll: StampCollection, name: str):
     coov = coll.get(CellOptimizationOnVector)
     if coov is not None:
         raise ValueError(f"{name} is not compatible with cell optimization on vector")
@@ -24,7 +28,7 @@ def _mdtemp(v):
     return f"[{v[0]},{v[1]}]"
 
 
-class _MD_SO(_IWD, default="__init__", prop="ionmov"):
+class MD_SO_Base(IndexedWithDefault, default="__init__", prop="ionmov"):
     def __init__(self, timeStep: float = 100, maxSteps: int = 1000) -> None:
         super().__init__()
         assert _pos_num(timeStep), "time step (for molecular dynamics or structural optimization) must be a positive number"
@@ -37,10 +41,10 @@ class _MD_SO(_IWD, default="__init__", prop="ionmov"):
         return super().stamp(index) + f"\ndtion{s} {self._dt}\nntime{s} {self._ms}"
 
 
-class MolecularDynamics(_MD_SO, default="basic"):
+class MolecularDynamics(MD_SO_Base, default="basic"):
     """Move atoms using molecular dynamics"""
 
-    def compatible(self, coll: _SC):
+    def compatible(self, coll: StampCollection):
         if self._index != 13: # isoenthaplic is the only one that accept cell optimization
             _check_co(coll, "Molecular dynamics")
     
@@ -62,7 +66,7 @@ class MolecularDynamics(_MD_SO, default="basic"):
         self._index = 7
         return self
     
-    def NoseHoover(self, inertia: float = 100, temperatures: _T[float, float] = (200,300)):
+    def NoseHoover(self, inertia: float = 100, temperatures: Tuple[float, float] = (200,300)):
         """
         Molecular dynamics with Nose-Hoover thermostat, using the Verlet algorithm
         
@@ -75,7 +79,7 @@ class MolecularDynamics(_MD_SO, default="basic"):
         self._extra = { "mdtemp": _mdtemp(temperatures), "noseinert": inertia }
         return self
 
-    def Langevin(self, friction: float, temperatures: _T[float, float] = (200,300)):
+    def Langevin(self, friction: float, temperatures: Tuple[float, float] = (200,300)):
         """
         Langevin molecular dynamics
 
@@ -112,8 +116,8 @@ class MolecularDynamics(_MD_SO, default="basic"):
          3. SFC at t=`iterations`. Computation of the potential parameters. 
          4. LOTF interpolation, linear interpolation of the potential parameters and computation of the atomic forces and positions between t=0 and t=`iterations`.
         
-        NOTE: LOTF has to be enabled at configure time. If LOTF is not enabled, abinit will set automatically isokinetic MD.\n
-         """
+        NOTE: LOTF has to be enabled at configure time. If LOTF is not enabled, abinit will set automatically isokinetic molecular dynamics.\n
+        """
         assert type(iterations) is int and iterations > 0, "Number of LOTF iterations must be a positive integer"
         self._index = 23
         self._extra = {"lotf_nitex": iterations }
@@ -125,8 +129,8 @@ class MolecularDynamics(_MD_SO, default="basic"):
         return self
 
 
-class StructuralOptimization(_MD_SO, default="BFGS"):
-    def compatible(self, coll: _SC):
+class StructuralOptimization(MD_SO_Base, default="BFGS"):
+    def compatible(self, coll: StampCollection):
         if self._index not in (2, 3, 22):
             _check_co(coll, "Structural optimization")
 
@@ -154,7 +158,7 @@ class StructuralOptimization(_MD_SO, default="BFGS"):
         self._index = 4
         return self
 
-    def simpleRelaxation(self, preconditioning: _L[-1, 0, 1, 2] = 0):
+    def simpleRelaxation(self, preconditioning: Literal[-1, 0, 1, 2] = 0):
         """Simple relaxation of ionic positions according to (converged) forces\n
         `preconditioning` is an integer between -1 and 2 and describes the way a change of force is derived from a change of atomic position. 
         In particular: hessian is 2^(-preconditioning) times the identity matrix
@@ -177,7 +181,7 @@ class StructuralOptimization(_MD_SO, default="BFGS"):
         return self
 
 
-class FIRE(_S):
+class FIRE(Stampable):
     """Fast inertial relaxation engine (FIRE) algorithm proposed by Erik Bitzek, Pekka Koskinen, Franz Gähler, Michael Moseler, and Peter Gumbsch in [[Bitzek2006]](https://docs.abinit.org/theory/bibliography#bitzek2006). According to the authors, the efficiency of this method is nearly the same as L-BFGS. It is based on conventional molecular dynamics with additional velocity modifications and adaptive time steps. The purpose of this algorithm is relaxation, not molecular dynamics. \n
     The initial time step is set with `initialTimeStep`: it governs the ion position changes, but the cell parameter changes as well. The suggested first guess is 0.03.\n
     The positions are in reduced coordinates instead of in cartesian coordinates."""
@@ -191,12 +195,12 @@ class FIRE(_S):
         return f"ionmov{s} 15\ndtion{s} {self.t}"
 
 
-class MonteCarloSampling(_S):
+class MonteCarloSampling(Stampable):
     """Hybrid Monte Carlo sampling of the ionic positions at fixed temperature and unit cell geometry (NVT ensemble). 
     The underlying molecular dynamics corresponds to the constant energy one. \n
     Within the HMC algorithm [[Duane1987]](https://docs.abinit.org/theory/bibliography#duane1987), the trial states are generated via short trajectories (ten steps in current implementation). The initial momenta for each trial are randomly sampled from Boltzmann distribution, and the final trajectory state is either accepted or rejected based on the Metropolis criterion. Such strategy allows to simultaneously update all reduced coordinates, achieve higher acceptance ratio than classical Metropolis Monte Carlo and better sampling efficiency for shallow energy landscapes [[Prokhorenko2018]](https://docs.abinit.org/theory/bibliography#prokhorenko2018)"""
 
-    def __init__(self, temperatures: _T[float, float] = (200,300), timeStep: float = 100) -> None:
+    def __init__(self, temperatures: Tuple[float, float] = (200,300), timeStep: float = 100) -> None:
         assert _pos_num(timeStep)
         self.t = _mdtemp(temperatures)
         self.s = timeStep
@@ -205,11 +209,11 @@ class MonteCarloSampling(_S):
         s = index or ''
         return f"ionmov{s} 24\ndtion{s} {self.s}\nmdtemp{s} {self.t}"
 
-    def compatible(self, coll: _SC):
+    def compatible(self, coll: StampCollection):
         _check_co(coll, "Monte Carlo Sampling")
 
 
-def _CO_method(n: int):
+def CO_method(n: int):
     def fn(self: 'CellOptimization'):
         assert self.n == 0, "Cell optimization defined multiple times"
         self.n = n
@@ -217,19 +221,16 @@ def _CO_method(n: int):
     return fn
 
 
-class CellOptimization(_S):
-    def __init__(self, energyCutoffSmearing: _En|float|None = None) -> None:
+class CellOptimization(Stampable):
+    def __init__(self, energyCutoffSmearing: Energy = 0.5*Ha) -> None:
         """
         `energyCutoffSmearing` regulates the smoothing the total energy curve (as a function of the energy cutoff), in order to keep consistency with the stress (and automatically including the Pulay stress).
 
-        If none is provided, 0.5 Hatree is used as default value (it is the recommended one). If you want to optimize cell shape and size without smoothing the total energy curve (a dangerous thing to do), use a very small value, on the order of one microHartree, but never zero.
+        The default (recommended) value is 0.5 Hatree. If you want to optimize cell shape and size without smoothing the total energy curve (a dangerous thing to do), use a very small value, on the order of one microHartree, but never zero.
         """
         super().__init__()
-        if energyCutoffSmearing is None:
-            self.s = _En(0.5,0)
-        else:
-            self.s = _En.sanitize(energyCutoffSmearing)
-            assert self.s._v > 0, "Energy cutoff smearing must be positive"
+        assert energyCutoffSmearing._v > 0, "Energy cutoff smearing must be positive"
+        self.s = energyCutoffSmearing
         self.n = 0
 
     
@@ -237,18 +238,18 @@ class CellOptimization(_S):
         s = index or ''
         return f"optcell{s} {self.n}\necutsm{s} {self.s}"
     
-    def compatible(self, coll: _SC):
+    def compatible(self, coll: StampCollection):
         assert self.n != 0, "Cell optimization not fully defined"
     
-    OnVolumeOnly = _CO_method(1)
-    Full = _CO_method(2)
-    ConstantVolume = _CO_method(3)
+    OnVolumeOnly = CO_method(1)
+    Full = CO_method(2)
+    ConstantVolume = CO_method(3)
 
 
-class CellOptimizationOnVector(_S):
-    def __init__(self, energyCutoffSmearing: _En|float, axis: _L[1,2,3,'x','y','z','X','Y','Z'], keep: bool) -> None:
+class CellOptimizationOnVector(Stampable):
+    def __init__(self, energyCutoffSmearing: Energy, axis: Literal[1,2,3,'x','y','z','X','Y','Z'], keep: bool) -> None:
         super().__init__()
-        self.s = _En.sanitize(energyCutoffSmearing)
+        self.s = energyCutoffSmearing
         if type(axis) is int:
             assert 1 <= axis <= 3, "Axis index must be between 1 and 3"
             self._a = axis
@@ -256,7 +257,7 @@ class CellOptimizationOnVector(_S):
             n = ('x','y','z')
             s = axis.lower()
             assert s in n, "Axis name can only be one of the following charachters: xyxXYZ"
-            self._a = n.index(n)
+            self._a = n.index(s)
         else:
             raise TypeError("Invalid type for axis argument")
         assert type(keep) is bool, "Argument keeep must be a bool"
@@ -267,7 +268,7 @@ class CellOptimizationOnVector(_S):
         return f"optcell{s} {4 + self._a + 3*int(self._k)}\necutsm{s} {self.s}"
 
 
-class MaxLatticeDilatation(_S):
+class MaxLatticeDilatation(Stampable):
     def __init__(self, additional: float = 0, exceed: bool = False) -> None:
         super().__init__()
         assert _pos0_num(additional), "Additional percentage of memory must be a positive number"

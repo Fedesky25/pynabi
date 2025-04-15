@@ -141,11 +141,11 @@ class Delayed(Stampable):
         return self.d.stamp(index or '', self.v)
 
 
-def delayer(index: int, T: Type, use: Type[Delayed] = Delayed):
-    @classmethod
-    def fn(cls, value: T):
-        return use(cls, index, value)
-    return fn
+# def delayer(index: int, T: Type, use: Type[Delayed] = Delayed):
+#     @classmethod
+#     def fn(cls, value):
+#         return use(cls, index, value)
+#     return fn
 
 
 class SKO:
