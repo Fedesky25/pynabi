@@ -45,7 +45,7 @@ class MD_SO_Base(IndexedWithDefault, default="__init__", prop="ionmov"):
         return super().stamp(index) + f"\ndtion{s} {self._dt}\nntime{s} {self._ms}"
 
 
-class MolecularDynamics(MD_SO_Base, default="basic"):
+class MolecularDynamics(MD_SO_Base, default="basic", prop="ionmov"):
     """Move atoms using molecular dynamics"""
 
     def compatible(self, coll: StampCollection):
@@ -133,7 +133,7 @@ class MolecularDynamics(MD_SO_Base, default="basic"):
         return self
 
 
-class StructuralOptimization(MD_SO_Base, default="BFGS"):
+class StructuralOptimization(MD_SO_Base, default="BFGS", prop="ionmov"):
     def compatible(self, coll: StampCollection):
         if self._index not in (2, 3, 22):
             _check_co(coll, "Structural optimization")
