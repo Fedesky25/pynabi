@@ -213,37 +213,28 @@ class MonteCarloSampling(Stampable):
         _check_co(coll, "Monte Carlo Sampling")
 
 
-def CO_method(n: int):
-    def fn(self: 'CellOptimization'):
-        assert self.n == 0, "Cell optimization defined multiple times"
-        self.n = n
-        return self
-    return fn
-
-
 class CellOptimization(Stampable):
-    def __init__(self, energyCutoffSmearing: Energy = 0.5*Ha) -> None:
-        """
-        `energyCutoffSmearing` regulates the smoothing the total energy curve (as a function of the energy cutoff), in order to keep consistency with the stress (and automatically including the Pulay stress).
+    """Optimize the unit cell shape and dimensions. The configuration for which the stress almost vanishes is iteratively determined, by using the same algorithms as for the nuclei positions.
+    
+    NOTE: It is strongly suggested first to optimize the ionic positions without cell shape and/or volume optimization"""
 
-        The default (recommended) value is 0.5 Hatree. If you want to optimize cell shape and size without smoothing the total energy curve (a dangerous thing to do), use a very small value, on the order of one microHartree, but never zero.
+    def __init__(self, shape = True, volume = True, energyCutoffSmearing: Energy = 0.5*Ha) -> None:
+        """
+        - `shape`: whether to optimize the cell shape; if false the cell shape is preserved
+
+        - `volume`: whether to optimize the cell volume; is false the cell volume is preserved
+
+        - `energyCutoffSmearing` regulates the smoothing the total energy curve (as a function of the energy cutoff), in order to keep consistency with the stress (and automatically including the Pulay stress). The default (recommended) value is 0.5 Hatree. If you want to optimize cell shape and volume without smoothing the total energy curve (a dangerous thing to do), use a very small value, on the order of one microHartree, but never zero.
         """
         super().__init__()
         assert energyCutoffSmearing._v > 0, "Energy cutoff smearing must be positive"
-        self.s = energyCutoffSmearing
-        self.n = 0
-
+        self._s = energyCutoffSmearing
+        n = (shape << 1) | volume;
+        self._n = n ^ (n>>1);
     
     def stamp(self, index: int):
         s = index or ''
-        return f"optcell{s} {self.n}\necutsm{s} {self.s}"
-    
-    def compatible(self, coll: StampCollection):
-        assert self.n != 0, "Cell optimization not fully defined"
-    
-    OnVolumeOnly = CO_method(1)
-    Full = CO_method(2)
-    ConstantVolume = CO_method(3)
+        return f"optcell{s} {self._n}\necutsm{s} {self._s}"
 
 
 class CellOptimizationOnVector(Stampable):
