@@ -114,11 +114,10 @@ class Lattice(Stampable):
     @staticmethod
     def fromPrimitives(a: Vec3D, b: Vec3D, c: Vec3D, scaling: Union[Vec3D,Pos3D]):
         """
-        Construct lattice from primitives [a, b, c]\n
-        Scaling is applied to the cartesian axis
+        Construct lattice from dimensionless primitives [a, b, c]. Each primitive gets scaled by the corresponfing component of `scaling`.
         """
         assert type(a) is Vec3D and type(b) is Vec3D and type(c) is Vec3D, "Primitive vectors must be of type Vec3D"
-        return Lattice(scalecart=Pos3D.sanitize(scaling), rprim=f"{a}   {b}   {c}")
+        return Lattice(acell=Pos3D.sanitize(scaling), rprim=f"{a}   {b}   {c}")
     
     @staticmethod
     def CUB(a: Union[float,Length]):
@@ -130,7 +129,7 @@ class Lattice(Stampable):
             Vec3D(-0.5,0.5,0.5),
             Vec3D(0.5,-0.5,0.5),
             Vec3D(0.5,0.5,-0.5),
-            _2uni(a)
+            Pos3D.uniform(a)
         )
 
     @staticmethod
@@ -140,34 +139,37 @@ class Lattice(Stampable):
             Vec3D(0.5, 0.5, 0.0),
             Vec3D(0.0, 0.5, 0.5),
             Vec3D(0.5, 0.0, 0.5),
-            _2uni(a)
+            Pos3D.uniform(a)
         )
 
     @staticmethod
-    def HEX(a: float, c: float, unit: Optional[Length] = None):
+    def HEX(a: Union[Length,float], c: Union[Length,float]):
         return Lattice.fromPrimitives(
             Vec3D(-1.0,0.0,0.0),
             Vec3D(-0.5,0.8660254037844386,0.0),
             Vec3D(0.0,0.0,1.0),
-            Pos3D(a,a,c,unit)
+            Pos3D(a,a,c)
         )
 
     @staticmethod
-    def TET(a: float, c: float, unit: Optional[Length] = None):
+    def TET(a: Union[Length,float], c: Union[Length,float]):
         """Simple tetragonal"""
         return Lattice.fromAngles(
             Vec3D.uniform(90),
-            Pos3D(a,a,c,unit)
+            Pos3D(a,a,c)
         )
     
     @staticmethod
-    def BCT(a: float, c: float, unit: Optional[Length] = None):
+    def BCT(a: Union[Length,float], c: Union[Length,float]):
         """Body-centered tetragonal"""
+        a = Length.sanitize(a)
+        c = Length.sanitize(c)
+        r = c / a
         return Lattice.fromPrimitives(
-            Vec3D(-0.5,0.5,0.5),
-            Vec3D(0.5,-0.5,0.5),
-            Vec3D(0.5,0.5,-0.5),
-            Pos3D(a,a,c,unit)
+            Vec3D(-0.5,0.5,0.5*r),
+            Vec3D(0.5,-0.5,0.5*r),
+            Vec3D(0.5,0.5,-0.5*r),
+            Pos3D.uniform(a)
         )
 
     @staticmethod
@@ -179,10 +181,10 @@ class Lattice(Stampable):
     def ORCC(dimensions: Union[Vec3D,Pos3D]):
         """Base-centered orthorhombic"""
         return Lattice.fromPrimitives(
-            Vec3D(0.5,-0.5,0.0),
-            Vec3D(0.5,0.5,0.0),
-            Vec3D(0.0,0.0,1.0),
-            dimensions
+            Vec3D(0.5*dimensions.x,-0.5*dimensions.y, 0.0*dimensions.z),
+            Vec3D(0.5*dimensions.x, 0.5*dimensions.y, 0.0*dimensions.z),
+            Vec3D(0.0*dimensions.x, 0.0*dimensions.y, 1.0*dimensions.z),
+            Pos3D(1,1,1,Length(1, dimensions.u)) # type: ignore
         )
 
 
@@ -238,9 +240,9 @@ def ZincBlendeLike(atomA: Atom, atomB: Atom, a: Union[float,Length]):
     return (b,l)
 
 
-def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: Optional[Length] = None):
+def HCP(atomA: Atom, atomB: Atom, a: Union[Length,float], c: Union[Length,float]):
     """Hexagonal Close Packet crystal"""
-    l = Lattice.HEX(a,c,unit)
+    l = Lattice.HEX(a,c)
     b = AtomBasis(
         (atomA, Vec3D.zero()),
         (atomB, Vec3D(2/3, 1/3, 0.5)),
@@ -248,12 +250,12 @@ def HCP(atomA: Atom, atomB: Atom, a: float, c: float, unit: Optional[Length] = N
     return (b,l)
 
 
-def WurtziteLike(atomA: Atom, atomB: Atom, a: float, c: float, unit: Optional[Length] = None):
+def WurtziteLike(atomA: Atom, atomB: Atom, a: Union[Length,float], c: Union[Length,float]):
     """
     Two interpenetrating HCP crystal\n
     Examples: wurtzite (ZnS), silver iodide (AgI), zinc oxide (ZnO), cadmium sulfide (CdS), cadmium selenide (CdSe), silicon carbide (α-SiC), gallium nitride (GaN), aluminium nitride (AlN), boron nitride (w-BN)
     """
-    l = Lattice.HEX(a,c,unit)
+    l = Lattice.HEX(a,c)
     b = AtomBasis(
         (atomA, Vec3D.zero()),
         (atomB, Vec3D(2/3, 1/3, 0.25)),
@@ -263,7 +265,7 @@ def WurtziteLike(atomA: Atom, atomB: Atom, a: float, c: float, unit: Optional[Le
     return (b,l)
 
 
-def NiAsLike(Ni: Atom, As: Atom, a: float, c: float, unit: Optional[Length] = None):
+def NiAsLike(Ni: Atom, As: Atom, a: Union[Length,float], c: Union[Length,float]):
     """
     Iterpenetrating HEX and HCP\n
     Examples: 
@@ -276,7 +278,7 @@ def NiAsLike(Ni: Atom, As: Atom, a: float, c: float, unit: Optional[Length] = No
      - Sobolevskite: Pd(Bi,Te)
      - Sudburyite: (Pd,Ni)Sb
     """
-    l = Lattice.HEX(a,c,unit)
+    l = Lattice.HEX(a,c)
     b = AtomBasis(
         (Ni, Vec3D.zero()),
         (As, Vec3D(2/3, 1/3, 0.25)),
