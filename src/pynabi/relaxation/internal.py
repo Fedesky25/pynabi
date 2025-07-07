@@ -146,14 +146,20 @@ class StructuralOptimization(MD_SO_Base, default="BFGS"):
         self._extra = {"vis": viscosity}
         return self
 
-    def BFGS(self, delocalizedCoordinates: bool = False, withEnergy: bool = False):
+    def BFGS(self, tolerance = 5e-05, energyDiffTol = False, delocalizedCoordinates = False, withEnergy = False):
         """Conduct structural optimization using the Broyden-Fletcher-Goldfarb-Shanno minimization (BFGS)\n
+         - `tolerance` sets the tolerance below which the iteration stops. If it is on the maximal absolute force (default), a value of about 5e-5 Hartree/Bohr or smaller is suggested. If it is on the maximal energy difference, a value of about 5e-4 eV/atom or smaller is suggested.  
+         - `energyDiffTol`: if true, the tolerance is on the maximal energy difference, otherwise it is on the maximal absolute force (default)
          - `withEnergy` determines whether to take into account the total energy or not (can be very unstable)
          - `delocalizedCoordinates` detemines whether to use delocalized coordinates or not (if true, no cell optimization can be done) 
         """
         assert type(delocalizedCoordinates) is bool, "delocalizedCoordinates must be a bool"
         assert type(withEnergy) is bool, "withEnergy must be a bool"
         self._index = 2 + 8*int(delocalizedCoordinates) + int(withEnergy)
+        self._extra = {
+            "tolmxf": 0.0 if energyDiffTol else tolerance,
+            "tolmxde": tolerance if energyDiffTol else 0.0
+        }
         return self
     
     def conjugateGradient(self):
@@ -163,11 +169,12 @@ class StructuralOptimization(MD_SO_Base, default="BFGS"):
         return self
 
     def simpleRelaxation(self, preconditioning: Literal[-1, 0, 1, 2] = 0):
-        """Simple relaxation of ionic positions according to (converged) forces\n
+        """Simple relaxation of ionic positions according to (converged) forces. It is equivalent to molecular dynamics with viscous damping and with zero masses
+        
         `preconditioning` is an integer between -1 and 2 and describes the way a change of force is derived from a change of atomic position. 
-        In particular: hessian is 2^(-preconditioning) times the identity matrix
+        In particular: hessian is 1/2^preconditioning times the identity matrix
         """
-        assert type(preconditioning) is int and -1 <= preconditioning <= 2, "preconditioning must a integer between -1 and 2"
+        assert type(preconditioning) is int and -1 <= preconditioning <= 2, "preconditioning must be a integer between -1 and 2"
         self._index = 5
         self._extra = { "iprcfc": preconditioning }
         return self
