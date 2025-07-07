@@ -30,6 +30,10 @@ def _mdtemp(v):
 
 class MD_SO_Base(IndexedWithDefault, default="__init__", prop="ionmov"):
     def __init__(self, timeStep: float = 100, maxSteps: int = 1000) -> None:
+        """
+        - `timeStep` controls the ion time step in atomic units of time.
+        - `maxSteps` is maximum number of steps to be done 
+        """
         super().__init__()
         assert _pos_num(timeStep), "time step (for molecular dynamics or structural optimization) must be a positive number"
         assert type(maxSteps) is int and maxSteps > 0, "number of maximum steps (for molecular dynamics or structural optimization) must be a positive integer"
