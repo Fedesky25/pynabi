@@ -113,9 +113,16 @@ eV = Energy(1.0, 1)
 Ry = Energy(1.0, 2)
 Kelvin = Energy(1.0, 3)
 
+def _ratio(x: Union[Length,float,int], unit: int):
+    if type(x) is Length:
+        return x._v*Length._U[unit][0]/Length._U[x._u][0]
+    elif type(x) is float or type(x) is int:
+        return x
+    else:
+        raise TypeError("Position component must be a scalar or length")
 
 class Pos3D:
-    def __init__(self, x: float, y: float, z: float, unit: Optional[Length] = None) -> None:
+    def __init__(self, x: Union[Length,float], y: Union[Length,float], z: Union[Length,float], unit: Optional[Length] = None) -> None:
         m = 1.0
         if unit is None:
             m = Length._R[0]
@@ -125,9 +132,10 @@ class Pos3D:
             self.u = unit._u
         else:
             raise TypeError("3D Position reference must be a Length itself")
-        self.x = x*m
-        self.y = y*m
-        self.z = z*m
+
+        self.x = _ratio(x, self.u)*m
+        self.y = _ratio(y, self.u)*m
+        self.z = _ratio(z, self.u)*m
     
     def __str__(self) -> str:
         return f"{self.x} {self.y} {self.z} {Length._U[self.u][1]}"
