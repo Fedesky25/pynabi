@@ -38,6 +38,21 @@ class AbMeasure:
         delta = other._v * U[other._u][0] / U[self._u][0]
         return type(self)(self._v - delta, self._u);
 
+    def __truediv__(self, other: Union[float,int]):
+        if type(other) is float or type(other) is int:
+            return type(self)(self._v/other, self._u)
+        else:
+            n = type(self).__name__
+            raise NotImplementedError(f"Quantity of type {n} can only be divided by a scalar number or a {n}")
+        
+    def __rtruediv__(self, other: Self):
+        if type(other) is type(self):
+            U = type(self)._U
+            return (other._v / self._v) * (U[other._u][0]/U[self._u][0])
+        else:
+            n = type(self).__name__
+            raise NotImplementedError(f"Quantity of type {n} can only be divided by a scalar number or a {n}")
+
     def __neg__(self):
         return type(self)(-self._v, self._u)
 
